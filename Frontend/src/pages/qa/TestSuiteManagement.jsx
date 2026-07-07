@@ -1,0 +1,142 @@
+import { useState, useEffect } from 'react'
+import { Plus, Upload, Edit2, Trash2, Download, TestTube, Loader } from 'lucide-react'
+import { API_ENDPOINTS } from '../../config'
+
+export default function TestSuiteManagement() {
+  const [suites, setSuites] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [showModal, setShowModal] = useState(false)
+  const [form, setForm] = useState({ name: '', website: '', description: '' })
+  const [editing, setEditing] = useState(null)
+  const [dragOver, setDragOver] = useState(false)
+
+  useEffect(() => {
+    fetch(API_ENDPOINTS.testSuites)
+      .then(res => {
+        if (!res.ok) throw new Error('API fetch error')
+        return res.json()
+      })
+      .then(data => {
+        const dataArray = Array.isArray(data) ? data : data.items || []
+        setSuites(dataArray)
+        setLoading(false)
+      })
+      .catch(err => {
+        console.log('Chưa có dữ liệu từ Backend:', err)
+        setLoading(false)
+      })
+  }, [])
+
+  const handleSave = () => {
+    if (editing) {
+      setSuites(s => s.map(x => x.id === editing ? { ...x, ...form } : x))
+    } else {
+      setSuites(s => [...s, { ...form, id: Date.now(), cases: 0, size: '—', updatedAt: 'Vừa xong', status: 'draft' }])
+    }
+    setShowModal(false); setEditing(null); setForm({ name: '', website: '', description: '' })
+  }
+  const del = (id) => setSuites(s => s.filter(x => x.id !== id))
+  const openEdit = (s) => { setForm({ name: s.name, website: s.website, description: s.description }); setEditing(s.id); setShowModal(true) }
+
+  return (
+    <div className="page">
+      <div className="page-header">
+        <div>
+          <div className="page-title">Quản lý Test Suite</div>
+          <div className="page-subtitle">Upload và quản lý kịch bản Playwright • Lưu trữ trên Amazon S3</div>
+        </div>
+        <button className="btn btn-primary" id="btn-add-suite" onClick={() => setShowModal(true)}>
+          <Plus size={16} /> Thêm Test Suite
+        </button>
+      </div>
+
+      {/* Upload zone */}
+      <div
+        className="card"
+        style={{ borderStyle: 'dashed', borderColor: dragOver ? 'var(--accent-blue)' : 'var(--border)', background: dragOver ? 'rgba(59,130,246,0.05)' : 'transparent', cursor: 'pointer', textAlign: 'center', marginBottom: 24, transition: 'all 0.2s' }}
+        onDragOver={e => { e.preventDefault(); setDragOver(true) }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={e => { e.preventDefault(); setDragOver(false) }}
+        onClick={() => setShowModal(true)}
+      >
+        <Upload size={32} style={{ margin: '0 auto 12px', color: dragOver ? 'var(--accent-blue)' : 'var(--text-muted)' }} />
+        <div style={{ fontWeight: 600, marginBottom: 4 }}>Kéo thả file .spec.js / .spec.ts vào đây</div>
+        <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>hoặc click để chọn file • Hỗ trợ: .js, .ts, .zip</div>
+      </div>
+
+      {/* Suites grid */}
+      {loading ? (
+        <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', background: 'var(--bg-card)', borderRadius: 12, border: '1px dashed var(--border)' }}>
+          Đang tải kịch bản...
+        </div>
+      ) : suites.length === 0 ? (
+        <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', background: 'var(--bg-card)', borderRadius: 12, border: '1px dashed var(--border)' }}>
+          Chưa có Test Suite nào. Hãy tải lên một file kịch bản mới.
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
+          {suites.map(suite => (
+            <div key={suite.id} className="card" style={{ position: 'relative' }}>
+              <div style={{ position: 'absolute', top: 16, right: 16 }}>
+                <span className={`badge badge-${suite.status === 'active' ? 'green' : 'gray'}`}>{suite.status === 'active' ? 'Active' : 'Draft'}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(139,92,246,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <TestTube size={18} style={{ color: 'var(--accent-purple)' }} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{suite.name}</div>
+                  <div style={{ fontSize: 12, color: 'var(--accent-cyan)' }}>{suite.website}</div>
+                </div>
+              </div>
+              <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16, lineHeight: 1.5 }}>{suite.description}</p>
+              <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
+                <div><div style={{ fontSize: 18, fontWeight: 800 }}>{suite.cases}</div><div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Test Cases</div></div>
+                <div><div style={{ fontSize: 18, fontWeight: 800 }}>{suite.size}</div><div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Kích thước</div></div>
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 16 }}>Cập nhật: {suite.updatedAt}</div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className="btn btn-secondary btn-sm btn-icon" title="Tải về"><Download size={13} /></button>
+                <button className="btn btn-secondary btn-sm btn-icon" onClick={() => openEdit(suite)}><Edit2 size={13} /></button>
+                <button className="btn btn-danger btn-sm btn-icon" onClick={() => del(suite.id)}><Trash2 size={13} /></button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {showModal && (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowModal(false)}>
+          <div className="modal">
+            <div className="modal-header">
+              <div className="modal-title">{editing ? 'Chỉnh sửa Test Suite' : 'Thêm Test Suite mới'}</div>
+              <button className="btn btn-secondary btn-sm btn-icon" onClick={() => { setShowModal(false); setEditing(null) }}>✕</button>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Tên file</label>
+              <input className="form-input" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="checkout-flow.spec.js" />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Website</label>
+              <input className="form-input" value={form.website} onChange={e => setForm(f => ({ ...f, website: e.target.value }))} placeholder="shop.company.com" />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Mô tả</label>
+              <textarea className="form-textarea" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Mô tả kịch bản kiểm thử..." style={{ minHeight: 80 }} />
+            </div>
+            {!editing && (
+              <div className="form-group">
+                <label className="form-label">Upload file</label>
+                <input type="file" className="form-input" accept=".js,.ts,.zip" />
+              </div>
+            )}
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => { setShowModal(false); setEditing(null) }}>Hủy</button>
+              <button className="btn btn-primary" onClick={handleSave}>{editing ? 'Lưu' : 'Upload'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
