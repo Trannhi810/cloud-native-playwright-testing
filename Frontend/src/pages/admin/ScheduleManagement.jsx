@@ -26,18 +26,49 @@ export default function ScheduleManagement() {
       })
   }, [])
 
-  const handleSave = () => {
+  const refetch = () => {
+    fetch(API_ENDPOINTS.schedules)
+      .then(r => r.json())
+      .then(data => setSchedules(Array.isArray(data) ? data : data.Schedules || data.items || []))
+      .catch(() => {})
+  }
+
+  const handleSave = async () => {
+    const tempId = editing || Date.now().toString()
     if (editing) {
       setSchedules(s => s.map(x => x.id === editing ? { ...x, ...form } : x))
     } else {
-      setSchedules(s => [...s, { ...form, id: Date.now(), status: 'active', lastRun: '—', nextRun: '—', humanCron: form.cron }])
+      setSchedules(s => [...s, { ...form, id: tempId, humanCron: form.cron, status: 'active', lastRun: '—', nextRun: '—' }])
     }
     setShowModal(false); setEditing(null); setForm({ name: '', website: '', env: 'Production', cron: '0 2 * * *' })
+
+    try {
+      const url = editing ? `${API_ENDPOINTS.schedules}/${tempId}` : API_ENDPOINTS.schedules
+      const method = editing ? 'PUT' : 'POST'
+      await fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
+      })
+    } catch (err) {
+      console.error('Lỗi khi lưu lịch:', err)
+    }
   }
 
   const toggleStatus = (id) => setSchedules(s => s.map(x => x.id === id ? { ...x, status: x.status === 'active' ? 'paused' : 'active' } : x))
-  const del = (id) => setSchedules(s => s.filter(x => x.id !== id))
+
+  const del = async (id) => {
+    try {
+      await fetch(`${API_ENDPOINTS.schedules}/${id}`, { method: 'DELETE' })
+      setSchedules(s => s.filter(x => x.id !== id))
+    } catch (err) {
+      console.error('Lỗi khi xóa lịch:', err)
+      setSchedules(s => s.filter(x => x.id !== id))
+    }
+  }
+
   const openEdit = (sc) => { setForm({ name: sc.name, website: sc.website, env: sc.env, cron: sc.cron }); setEditing(sc.id); setShowModal(true) }
+
 
   return (
     <div className="page">

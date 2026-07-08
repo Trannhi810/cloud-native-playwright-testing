@@ -23,11 +23,13 @@ export default function ViewerDashboard() {
         return res.json()
       })
       .then(apiData => {
+        // Backend /stats trả về: { stats, pieData, trendData, recentRuns }
+        // Map sang format mà ViewerDashboard dùng
         setData({
-          stats: apiData.viewerStats || initialStats,
-          trendData: apiData.viewerTrend || [],
-          recentRuns: apiData.recentRuns || [],
-          sites: apiData.sites || []
+          stats: apiData.stats || initialStats,    // dùng "stats" (có sẵn từ backend)
+          trendData: apiData.trendData || [],       // dùng "trendData" (có sẵn từ backend)
+          recentRuns: apiData.recentRuns || [],     // dùng "recentRuns" (có sẵn từ backend)
+          sites: []                                 // backend chưa có endpoint sites, để rỗng
         })
         setLoading(false)
       })

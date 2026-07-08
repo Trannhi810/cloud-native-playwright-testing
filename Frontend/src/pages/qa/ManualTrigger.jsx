@@ -48,8 +48,9 @@ export default function ManualTrigger() {
       if (!res.ok) throw new Error(`API trả về lỗi: ${res.status}`)
       
       const data = await res.json()
-      if (data && data.runId) {
-        setRunId(data.runId)
+      // Backend trả về "task_id" (UUID), không phải "runId"
+      if (data && data.task_id) {
+        setRunId(data.task_id)
       }
       
       // Giả lập progress trong khi SQS/ECS xử lý

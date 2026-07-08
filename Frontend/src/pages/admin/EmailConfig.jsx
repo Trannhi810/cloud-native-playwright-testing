@@ -1,45 +1,59 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Mail, Globe, Loader } from 'lucide-react'
+import { Plus, Trash2, Mail, Globe, Loader, AlertCircle } from 'lucide-react'
 import { API_ENDPOINTS } from '../../config'
 
 export default function EmailConfig() {
-  const [groups, setGroups] = useState([])
+  const [emails, setEmails] = useState([])
   const [loading, setLoading] = useState(true)
-  const [showModal, setShowModal] = useState(false)
-  const [selectedGroup, setSelectedGroup] = useState(null)
   const [newEmail, setNewEmail] = useState('')
-  const [newWebsite, setNewWebsite] = useState('')
+
+  const refetch = () => {
+    fetch(API_ENDPOINTS.emailConfig)
+      .then(res => res.json())
+      .then(data => setEmails(Array.isArray(data) ? data : data.items || []))
+  }
 
   useEffect(() => {
     fetch(API_ENDPOINTS.emailConfig)
-      .then(res => {
-        if (!res.ok) throw new Error('API fetch error')
-        return res.json()
-      })
+      .then(res => res.json())
       .then(data => {
-        const dataArray = Array.isArray(data) ? data : data.items || []
-        setGroups(dataArray)
-        setLoading(false)
-      })
-      .catch(err => {
-        console.log('Chưa có dữ liệu từ Backend:', err)
+        setEmails(Array.isArray(data) ? data : data.items || [])
         setLoading(false)
       })
   }, [])
 
-  const addEmail = (groupId) => {
+  const addEmail = async () => {
     if (!newEmail) return
-    setGroups(g => g.map(x => x.id === groupId ? { ...x, emails: [...x.emails, newEmail] } : x))
+    const emailToSave = newEmail
+    setEmails(prev => [...prev, { email_address: emailToSave, active: true }])
     setNewEmail('')
+    
+    try {
+      await fetch(API_ENDPOINTS.emailConfig, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email_address: emailToSave, active: true })
+      })
+    } catch (e) { console.error(e) }
   }
-  const removeEmail = (groupId, email) => setGroups(g => g.map(x => x.id === groupId ? { ...x, emails: x.emails.filter(e => e !== email) } : x))
-  const toggleNotify = (groupId, type) => setGroups(g => g.map(x => x.id === groupId ? { ...x, [type]: !x[type] } : x))
-  const addGroup = () => {
-    if (!newWebsite) return
-    setGroups(g => [...g, { id: Date.now(), website: newWebsite, emails: [], notifyPass: true, notifyFail: true }])
-    setNewWebsite(''); setShowModal(false)
+
+  const delEmail = async (email) => {
+    setEmails(prev => prev.filter(e => e.email_address !== email))
+    try {
+      await fetch(`${API_ENDPOINTS.emailConfig}/${email}`, { method: 'DELETE' })
+    } catch (e) { console.error(e) }
   }
-  const delGroup = (id) => setGroups(g => g.filter(x => x.id !== id))
+
+  const toggleActive = async (email, currentActive) => {
+    setEmails(prev => prev.map(e => e.email_address === email ? { ...e, active: !currentActive } : e))
+    try {
+      await fetch(API_ENDPOINTS.emailConfig, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email_address: email, active: !currentActive })
+      })
+    } catch (e) { console.error(e) }
+  }
 
   return (
     <div className="page">
@@ -48,93 +62,53 @@ export default function EmailConfig() {
           <div className="page-title">Cấu hình Email thông báo</div>
           <div className="page-subtitle">Quản lý danh sách nhận thông báo kết quả qua Amazon SNS + SES</div>
         </div>
-        <button className="btn btn-primary" id="btn-add-email-group" onClick={() => setShowModal(true)}>
-          <Plus size={16} /> Thêm nhóm website
-        </button>
       </div>
 
       <div className="alert alert-info">
         <Mail size={16} />
-        Email được gửi qua Amazon SES. Mỗi website có danh sách nhận thông báo riêng, không gửi chung cho toàn công ty.
+        Email được gửi qua Amazon SES. Danh sách này nhận thông báo tổng hợp khi có thay đổi trạng thái kiểm thử.
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {loading ? (
-                <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', background: 'var(--bg-card)', borderRadius: 12, border: '1px dashed var(--border)' }}>
-                  Đang tải cấu hình Email...
-                </div>
-              ) : groups.length === 0 ? (
-                <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', background: 'var(--bg-card)', borderRadius: 12, border: '1px dashed var(--border)' }}>
-                  Chưa có cấu hình nhận Email nào được thiết lập.
-                </div>
-              ) : (
-                groups.map(group => (
-                  <div key={group.id} className="card">
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(6,182,212,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <Globe size={18} style={{ color: 'var(--accent-cyan)' }} />
-                        </div>
-                        <div>
-                          <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--text-primary)' }}>{group.website}</div>
-                          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{group.emails.length} người nhận</div>
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, cursor: 'pointer' }}>
-                          <input type="checkbox" checked={group.notifyPass} onChange={() => toggleNotify(group.id, 'notifyPass')} />
-                          <span className="badge badge-green">Gửi khi Pass</span>
-                        </label>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, cursor: 'pointer' }}>
-                          <input type="checkbox" checked={group.notifyFail} onChange={() => toggleNotify(group.id, 'notifyFail')} />
-                          <span className="badge badge-red">Gửi khi Fail</span>
-                        </label>
-                        <button className="btn btn-danger btn-sm btn-icon" onClick={() => delGroup(group.id)}><Trash2 size={13} /></button>
-                      </div>
-                    </div>
-
-            {/* Tags Input style */}
-            <div className="form-input" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: '8px', height: 'auto', minHeight: '44px', alignItems: 'center' }}>
-              {group.emails.map(email => (
-                <div key={email} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg-hover)', border: '1px solid var(--border)', borderRadius: 20, padding: '4px 8px 4px 10px', fontSize: 13, color: 'var(--text-primary)' }}>
-                  <Mail size={12} style={{ color: 'var(--blue)' }} />
-                  {email}
-                  <button onClick={() => removeEmail(group.id, email)} style={{ background: 'var(--border)', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: 0, width: 18, height: 18, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: 4, transition: 'all 0.15s' }} onMouseOver={e => e.currentTarget.style.background='#fecaca'} onMouseOut={e => e.currentTarget.style.background='var(--border)'}>✕</button>
-                </div>
-              ))}
-              
-              <input
-                style={{ flex: 1, minWidth: 150, border: 'none', background: 'transparent', outline: 'none', color: 'var(--text-primary)', fontSize: 14, padding: '4px' }}
-                placeholder={group.emails.length === 0 ? "Nhập email và nhấn Enter..." : "Thêm email..."}
-                value={selectedGroup === group.id ? newEmail : ''}
-                onFocus={() => setSelectedGroup(group.id)}
-                onChange={e => setNewEmail(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && addEmail(group.id)}
-              />
-            </div>
-          </div>
-        ))
-      )}
-      </div>
-
-      {showModal && (
-        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowModal(false)}>
-          <div className="modal">
-            <div className="modal-header">
-              <div className="modal-title">Thêm nhóm website mới</div>
-              <button className="btn btn-secondary btn-sm btn-icon" onClick={() => setShowModal(false)}>✕</button>
-            </div>
-            <div className="form-group">
-              <label className="form-label">URL Website</label>
-              <input className="form-input" value={newWebsite} onChange={e => setNewWebsite(e.target.value)} placeholder="website.company.com" />
-            </div>
-            <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Hủy</button>
-              <button className="btn btn-primary" onClick={addGroup}>Tạo nhóm</button>
-            </div>
-          </div>
+      <div className="card" style={{ marginBottom: 20 }}>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <input className="form-input" style={{ flex: 1 }} placeholder="Nhập địa chỉ email mới..." value={newEmail} onChange={e => setNewEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && addEmail()} />
+          <button className="btn btn-primary" onClick={addEmail}><Plus size={16} /> Thêm Email</button>
         </div>
-      )}
+      </div>
+
+      <div className="card">
+        <div className="table-container">
+          <table>
+            <thead>
+              <tr><th>Email</th><th>Trạng thái nhận tin</th><th>Thao tác</th></tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan="3" style={{ textAlign: 'center', padding: '30px' }}>Đang tải cấu hình...</td></tr>
+              ) : emails.length === 0 ? (
+                <tr><td colSpan="3" style={{ textAlign: 'center', padding: '30px' }}>Chưa có email nào trong danh sách.</td></tr>
+              ) : emails.map(e => (
+                <tr key={e.email_address}>
+                  <td style={{ fontWeight: 600 }}>{e.email_address}</td>
+                  <td>
+                    <span className={`badge badge-${e.active ? 'green' : 'gray'}`}>{e.active ? 'Đang nhận' : 'Tạm dừng'}</span>
+                  </td>
+                  <td>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button className="btn btn-secondary btn-sm" onClick={() => toggleActive(e.email_address, e.active)}>
+                        {e.active ? 'Tạm dừng' : 'Kích hoạt'}
+                      </button>
+                      <button className="btn btn-danger btn-sm btn-icon" onClick={() => delEmail(e.email_address)}>
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   )
 }

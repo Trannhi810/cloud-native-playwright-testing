@@ -9,6 +9,9 @@ export default function TestSuiteManagement() {
   const [form, setForm] = useState({ name: '', website: '', description: '' })
   const [editing, setEditing] = useState(null)
   const [dragOver, setDragOver] = useState(false)
+  const [scriptFile, setScriptFile] = useState(null)
+  const [scriptContent, setScriptContent] = useState('')
+  const [uploading, setUploading] = useState(false)
 
   useEffect(() => {
     fetch(API_ENDPOINTS.testSuites)
@@ -27,16 +30,91 @@ export default function TestSuiteManagement() {
       })
   }, [])
 
-  const handleSave = () => {
-    if (editing) {
-      setSuites(s => s.map(x => x.id === editing ? { ...x, ...form } : x))
-    } else {
-      setSuites(s => [...s, { ...form, id: Date.now(), cases: 0, size: '—', updatedAt: 'Vừa xong', status: 'draft' }])
-    }
-    setShowModal(false); setEditing(null); setForm({ name: '', website: '', description: '' })
+  const refetch = () => {
+    fetch(API_ENDPOINTS.testSuites)
+      .then(r => r.json())
+      .then(data => setSuites(Array.isArray(data) ? data : data.items || []))
+      .catch(() => {})
   }
-  const del = (id) => setSuites(s => s.filter(x => x.id !== id))
+
+  const readFile = (file) => {
+    if (!file) return
+    setScriptFile(file)
+    if (!form.name) {
+      setForm(f => ({ ...f, name: file.name }))
+    }
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      setScriptContent(e.target.result)
+    }
+    reader.readAsText(file)
+  }
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0]
+    if (file) readFile(file)
+  }
+
+  const handleSave = async () => {
+    setUploading(true)
+
+    const tempId = editing || Date.now().toString()
+    if (editing) {
+      setSuites(s => s.map(x => (x.id === editing || x.suite_id === editing) ? { ...x, ...form } : x))
+    } else {
+      setSuites(s => [...s, { ...form, id: tempId, suite_id: tempId, cases: 0, size: scriptFile ? `${(scriptFile.size/1024).toFixed(1)} KB` : '—', updatedAt: 'Vừa xong', status: 'active' }])
+    }
+    
+    setShowModal(false); setEditing(null)
+    setForm({ name: '', website: '', description: '' })
+    setScriptFile(null); setScriptContent('')
+
+    try {
+      const url = editing ? `${API_ENDPOINTS.testSuites}/${tempId}` : API_ENDPOINTS.testSuites
+      const method = editing ? 'PUT' : 'POST'
+      const payload = {
+        name: form.name,
+        target_url: form.website,
+        description: form.description,
+        test_script: scriptContent || ''
+      }
+      const res = await fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        console.error('Lỗi từ backend khi lưu suite:', err)
+      } else {
+        refetch()
+      }
+    } catch (err) {
+      console.error('Lỗi khi lưu suite:', err)
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const del = async (id) => {
+    try {
+      await fetch(`${API_ENDPOINTS.testSuites}/${id}`, { method: 'DELETE' })
+      setSuites(s => s.filter(x => x.id !== id))
+    } catch (err) {
+      console.error('Lỗi khi xóa suite:', err)
+      setSuites(s => s.filter(x => x.id !== id))
+    }
+  }
+
   const openEdit = (s) => { setForm({ name: s.name, website: s.website, description: s.description }); setEditing(s.id); setShowModal(true) }
+
+  const openModal = () => {
+    setEditing(null)
+    setForm({ name: '', website: '', description: '' })
+    setScriptFile(null)
+    setScriptContent('')
+    setShowModal(true)
+  }
 
   return (
     <div className="page">
@@ -45,26 +123,29 @@ export default function TestSuiteManagement() {
           <div className="page-title">Quản lý Test Suite</div>
           <div className="page-subtitle">Upload và quản lý kịch bản Playwright • Lưu trữ trên Amazon S3</div>
         </div>
-        <button className="btn btn-primary" id="btn-add-suite" onClick={() => setShowModal(true)}>
+        <button className="btn btn-primary" id="btn-add-suite" onClick={openModal}>
           <Plus size={16} /> Thêm Test Suite
         </button>
       </div>
 
-      {/* Upload zone */}
       <div
         className="card"
         style={{ borderStyle: 'dashed', borderColor: dragOver ? 'var(--accent-blue)' : 'var(--border)', background: dragOver ? 'rgba(59,130,246,0.05)' : 'transparent', cursor: 'pointer', textAlign: 'center', marginBottom: 24, transition: 'all 0.2s' }}
         onDragOver={e => { e.preventDefault(); setDragOver(true) }}
         onDragLeave={() => setDragOver(false)}
-        onDrop={e => { e.preventDefault(); setDragOver(false) }}
-        onClick={() => setShowModal(true)}
+        onDrop={e => { 
+          e.preventDefault()
+          setDragOver(false)
+          const file = e.dataTransfer.files?.[0]
+          if (file) { readFile(file); setShowModal(true) }
+        }}
+        onClick={openModal}
       >
         <Upload size={32} style={{ margin: '0 auto 12px', color: dragOver ? 'var(--accent-blue)' : 'var(--text-muted)' }} />
         <div style={{ fontWeight: 600, marginBottom: 4 }}>Kéo thả file .spec.js / .spec.ts vào đây</div>
         <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>hoặc click để chọn file • Hỗ trợ: .js, .ts, .zip</div>
       </div>
 
-      {/* Suites grid */}
       {loading ? (
         <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', background: 'var(--bg-card)', borderRadius: 12, border: '1px dashed var(--border)' }}>
           Đang tải kịch bản...
@@ -126,13 +207,20 @@ export default function TestSuiteManagement() {
             </div>
             {!editing && (
               <div className="form-group">
-                <label className="form-label">Upload file</label>
-                <input type="file" className="form-input" accept=".js,.ts,.zip" />
+                <label className="form-label">Upload file kịch bản</label>
+                <input type="file" className="form-input" accept=".js,.ts,.zip" onChange={handleFileChange} />
+                {scriptFile && (
+                  <div style={{ marginTop: 6, fontSize: 12, color: 'var(--accent-green)' }}>
+                    ✅ Đã chọn: {scriptFile.name} ({(scriptFile.size / 1024).toFixed(1)} KB)
+                  </div>
+                )}
               </div>
             )}
             <div className="modal-footer">
               <button className="btn btn-secondary" onClick={() => { setShowModal(false); setEditing(null) }}>Hủy</button>
-              <button className="btn btn-primary" onClick={handleSave}>{editing ? 'Lưu' : 'Upload'}</button>
+              <button className="btn btn-primary" onClick={handleSave} disabled={uploading}>
+                {uploading ? <><Loader size={14} style={{ animation: 'spin 1s linear infinite' }} /> Đang lưu...</> : (editing ? 'Lưu' : 'Upload')}
+              </button>
             </div>
           </div>
         </div>

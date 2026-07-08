@@ -1,7 +1,13 @@
-// ===== CẤU HÌNH AWS =====
-// Cập nhật các giá trị này sau khi deploy lên AWS
+// ===== CẤU HÌNH API =====
+// Tự động chọn URL dựa theo môi trường:
+//   - Local dev (npm run dev)  → localhost:3001 (local_server.py)
+//   - Production (npm run build) → AWS API Gateway
 
-export const API_BASE_URL = 'https://8bsb7jbhu7.execute-api.ap-southeast-1.amazonaws.com'
+const IS_DEV = import.meta.env.DEV // Vite tự set = true khi chạy dev server
+
+export const API_BASE_URL = IS_DEV
+  ? 'http://localhost:3001'          // Backend local chạy trên port 3001
+  : 'https://8bsb7jbhu7.execute-api.ap-southeast-1.amazonaws.com' // AWS Production
 
 export const COGNITO_CONFIG = {
   region: 'ap-southeast-1',

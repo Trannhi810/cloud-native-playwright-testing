@@ -32,17 +32,52 @@ export default function UserManagement() {
       })
   }, [])
 
-  const handleSave = () => {
-    if (editing) {
-      setUsers(u => u.map(x => x.id === editing ? { ...x, ...form } : x))
-    } else {
-      setUsers(u => [...u, { ...form, id: Date.now(), status: 'active', lastLogin: '—' }])
-    }
-    setShowModal(false); setEditing(null); setForm({ name: '', email: '', role: 'qa', password: '' })
+  const refetch = () => {
+    fetch(API_ENDPOINTS.users)
+      .then(r => r.json())
+      .then(data => setUsers(Array.isArray(data) ? data : data.items || []))
+      .catch(() => {})
   }
-  const del = (id) => setUsers(u => u.filter(x => x.id !== id))
-  const openEdit = (u) => { setForm({ name: u.name, email: u.email, role: u.role, password: '' }); setEditing(u.id); setShowModal(true) }
-  const toggleActive = (id) => setUsers(u => u.map(x => x.id === id ? { ...x, status: x.status === 'active' ? 'inactive' : 'active' } : x))
+
+  const handleSave = async () => {
+    // 1. Optimistic Update: Thêm/Sửa trực tiếp vào React state để hiển thị ngay lập tức (hiển thị tạm thời)
+    const tempId = editing || Date.now().toString()
+    if (editing) {
+      setUsers(u => u.map(x => (x.user_id === editing || x.id === editing) ? { ...x, ...form } : x))
+    } else {
+      setUsers(u => [...u, { ...form, id: tempId, user_id: tempId, status: 'active', lastLogin: '—' }])
+    }
+    
+    setShowModal(false); setEditing(null); setForm({ name: '', email: '', role: 'qa', password: '' })
+
+    // 2. Gọi API ngầm ở background (nếu backend chưa bật/lỗi thì UI vẫn đã được update tạm thời)
+    try {
+      const url = editing ? `${API_ENDPOINTS.users}/${tempId}` : API_ENDPOINTS.users
+      const method = editing ? 'PUT' : 'POST'
+      await fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
+      })
+      // refetch() // Bỏ refetch() đi để giữ lại cái state hiển thị tạm thời
+    } catch (err) {
+      console.error('Lỗi khi lưu user:', err)
+    }
+  }
+
+  const del = async (id) => {
+    try {
+      await fetch(`${API_ENDPOINTS.users}/${id}`, { method: 'DELETE' })
+      setUsers(u => u.filter(x => x.user_id !== id && x.id !== id))
+    } catch (err) {
+      console.error('Lỗi khi xóa user:', err)
+      setUsers(u => u.filter(x => x.user_id !== id && x.id !== id))
+    }
+  }
+
+  const openEdit = (u) => { setForm({ name: u.name, email: u.email, role: u.role, password: '' }); setEditing(u.user_id || u.id); setShowModal(true) }
+  const toggleActive = (id) => setUsers(u => u.map(x => (x.user_id === id || x.id === id) ? { ...x, status: x.status === 'active' ? 'inactive' : 'active' } : x))
+
 
   return (
     <div className="page">

@@ -30,8 +30,11 @@ export default function TestRunHistory() {
 
   const filtered = runs.filter(r =>
     (filterStatus === 'ALL' || r.status === filterStatus) &&
-    (r.website.includes(search) || r.id.includes(search) || r.suite.includes(search))
+    ((r.website || '').includes(search) || (r.id || '').includes(search) || (r.suite || '').includes(search))
   )
+
+  // Dùng full_id (UUID đầy đủ) để navigate, tránh lỗi DynamoDB get_item không tìm thấy item
+  const goToDetail = (run) => navigate(`/test-runs/${run.full_id || run.id}`)
 
   return (
     <div className="page">
@@ -68,7 +71,7 @@ export default function TestRunHistory() {
                 <tr><td colSpan="9" style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>Chưa có lần chạy kiểm thử nào.</td></tr>
               ) : (
                 filtered.map(run => (
-                  <tr key={run.id} style={{ cursor: 'pointer' }} onClick={() => navigate(`/test-runs/${run.id}`)}>
+                  <tr key={run.id} style={{ cursor: 'pointer' }} onClick={() => goToDetail(run)}>
                     <td><code style={{ color: 'var(--accent-blue)', fontSize: 12 }}>{run.id}</code></td>
                     <td>
                       <div style={{ fontWeight: 500, color: 'var(--text-primary)', fontSize: 13 }}>{run.website}</div>
@@ -94,7 +97,7 @@ export default function TestRunHistory() {
                       <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{run.triggeredBy}</div>
                     </td>
                     <td style={{ fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{run.time}</td>
-                    <td><button className="btn btn-secondary btn-sm" onClick={e => { e.stopPropagation(); navigate(`/test-runs/${run.id}`) }}>Chi tiết</button></td>
+                    <td><button className="btn btn-secondary btn-sm" onClick={e => { e.stopPropagation(); goToDetail(run) }}>Chi tiết</button></td>
                   </tr>
                 ))
               )}
