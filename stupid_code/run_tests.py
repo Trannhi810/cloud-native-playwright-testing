@@ -73,7 +73,7 @@ def load_lambda_module(module_name, relative_path):
     spec.loader.exec_module(module)
     return module
 
-lambda_backend = load_lambda_module('lambda_backend', 'lambda-backend/lambda_backend.py')
+lambda_backend = load_lambda_module('lambda_function', 'lambda-backend/lambda_function.py')
 lambda_coodinator = load_lambda_module('lambda_coodinator', 'lambda-coordinator/lambda_coodinator.py')
 lambda_error_handler = load_lambda_module('lambda_error_handler', 'lambda-error-handler/lambda_error_handler.py')
 lambda_postprocessing = load_lambda_module('lambda_postprocessing', 'lambda-postprocessing/lambda_postprocessing.py')

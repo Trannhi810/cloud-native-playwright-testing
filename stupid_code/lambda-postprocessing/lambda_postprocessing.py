@@ -56,7 +56,7 @@ def get_cloudwatch_logs(task_arn, log_group):
         return ""
     try:
         task_id_short = task_arn.split('/')[-1]
-        log_stream_name = f"playwright-runner/playwright-container/{task_id_short}"
+        log_stream_name = f"ecs/playwright-container/{task_id_short}"
 
         logger.info(f"Fetching logs from stream: {log_stream_name}")
         response = logs_client.get_log_events(
@@ -350,14 +350,11 @@ def lambda_handler(event, context):
         log_text = get_cloudwatch_logs(task_arn, log_group)
         report_url = get_report_presigned_url(task_id, report_bucket)
 
-        # Quan trọng: Cập nhật DB NGAY LẬP TỨC để thoát khỏi trạng thái 'running'
-        # Phòng trường hợp gọi Gemini AI bị Timeout (do Lambda chỉ có 3s - 10s)
         update_test_history(history_table, task_id, status, report_url, "Đang chờ phân tích AI...")
 
         api_key    = get_ai_api_key(secret_name)
         ai_summary = summarize_with_ai(api_key, log_text, status)
 
-        # Cập nhật lại lần 2 với kết quả AI thực sự
         update_test_history(history_table, task_id, status, report_url, ai_summary)
         send_report_email(sender_email, task_id, status, target_url, report_url, ai_summary)
 
