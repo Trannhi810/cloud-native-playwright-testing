@@ -8,8 +8,9 @@ export default function ScheduleManagement() {
   const [loading, setLoading] = useState(true)
   const [scheduleError, setScheduleError] = useState(null)
   const [showModal, setShowModal] = useState(false)
-  const [form, setForm] = useState({ name: '', website: '', env: 'Production', cron: '0 2 * * *' })
+  const [form, setForm] = useState({ name: '', website: '', env: 'Production', cron: '0 2 * * *', testSuite: '' })
   const [editing, setEditing] = useState(null)
+  const [testSuites, setTestSuites] = useState([])
 
   useEffect(() => {
     apiFetch(API_ENDPOINTS.schedules)
@@ -26,6 +27,12 @@ export default function ScheduleManagement() {
         console.log('Chưa có dữ liệu từ Backend:', err)
         setLoading(false)
       })
+
+    // Fetch Test Suites for dropdown
+    apiFetch(API_ENDPOINTS.testSuites)
+      .then(res => res.ok ? res.json() : [])
+      .then(data => setTestSuites(Array.isArray(data) ? data : data.items || []))
+      .catch(err => console.log('Không thể tải test suites', err))
   }, [])
 
   const refetch = () => {
@@ -60,7 +67,7 @@ export default function ScheduleManagement() {
       // Thành công
       setShowModal(false)
       setEditing(null)
-      setForm({ name: '', website: '', env: 'Production', cron: '0 2 * * *' })
+      setForm({ name: '', website: '', env: 'Production', cron: '0 2 * * *', testSuite: '' })
       refetch() // Gọi lại API để load danh sách mới chuẩn nhất
     } catch (err) {
       console.error('Lỗi khi lưu lịch:', err)
@@ -80,7 +87,7 @@ export default function ScheduleManagement() {
     }
   }
 
-  const openEdit = (sc) => { setForm({ name: sc.name, website: sc.website, env: sc.env, cron: sc.cron }); setEditing(sc.id); setShowModal(true) }
+  const openEdit = (sc) => { setForm({ name: sc.name, website: sc.website, env: sc.env, cron: sc.cron, testSuite: sc.testSuite || '' }); setEditing(sc.id); setShowModal(true) }
 
 
   return (
@@ -104,21 +111,22 @@ export default function ScheduleManagement() {
         <div className="table-container">
           <table>
             <thead>
-              <tr><th>Tên lịch</th><th>Website</th><th>Môi trường</th><th>Lịch chạy</th><th>Trạng thái</th><th>Lần cuối</th><th>Lần kế tiếp</th><th>Thao tác</th></tr>
+              <tr><th>Tên lịch</th><th>Website</th><th>Môi trường</th><th>Kịch bản</th><th>Lịch chạy</th><th>Trạng thái</th><th>Lần cuối</th><th>Lần kế tiếp</th><th>Thao tác</th></tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan="8" style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>Đang tải dữ liệu cấu hình...</td></tr>
+                <tr><td colSpan="9" style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>Đang tải dữ liệu cấu hình...</td></tr>
               ) : scheduleError ? (
-                <tr><td colSpan="8" style={{ textAlign: 'center', padding: '30px', color: '#ef4444' }}>Lỗi: {scheduleError}</td></tr>
+                <tr><td colSpan="9" style={{ textAlign: 'center', padding: '30px', color: '#ef4444' }}>Lỗi: {scheduleError}</td></tr>
               ) : schedules.length === 0 ? (
-                <tr><td colSpan="8" style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>Chưa có lịch trình kiểm thử nào được thiết lập.</td></tr>
+                <tr><td colSpan="9" style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>Chưa có lịch trình kiểm thử nào được thiết lập.</td></tr>
               ) : (
                 schedules.map(sc => (
                   <tr key={sc.id}>
                     <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{sc.name}</td>
                     <td style={{ color: 'var(--accent-cyan)', fontSize: 13 }}>{sc.website}</td>
                     <td><span className={`badge badge-${sc.env === 'Production' ? 'red' : sc.env === 'Staging' ? 'yellow' : 'blue'}`}>{sc.env}</span></td>
+                    <td style={{ fontSize: 13, color: 'var(--text-primary)' }}>{testSuites.find(t => t.id === sc.testSuite)?.name || sc.testSuite || '—'}</td>
                     <td style={{ whiteSpace: 'nowrap' }}>
                       <div style={{ fontSize: 13 }}>{sc.humanCron || '—'}</div>
                       <code style={{ fontSize: 11, color: 'var(--text-muted)' }}>{sc.cron}</code>
@@ -161,6 +169,15 @@ export default function ScheduleManagement() {
             <div className="form-group">
               <label className="form-label">URL Website</label>
               <input className="form-input" value={form.website} onChange={e => setForm(f => ({ ...f, website: e.target.value }))} placeholder="shop.company.com" />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Kịch bản kiểm thử (Test Suite)</label>
+              <select className="form-select" value={form.testSuite} onChange={e => setForm(f => ({ ...f, testSuite: e.target.value }))} required>
+                <option value="" disabled>-- Chọn một kịch bản --</option>
+                {testSuites.map(ts => (
+                  <option key={ts.id} value={ts.id}>{ts.name}</option>
+                ))}
+              </select>
             </div>
             <div className="grid-2">
               <div className="form-group">

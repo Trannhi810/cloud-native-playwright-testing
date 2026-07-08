@@ -133,7 +133,9 @@ export default function LoginPage() {
       if (email.toLowerCase().includes('admin')) role = 'admin'
       else if (email.toLowerCase().includes('qa')) role = 'qa'
 
-      setUser({ email, name, role })
+      const userData = { email, name, role }
+      localStorage.setItem('user', JSON.stringify(userData))
+      setUser(userData)
       setLoading(false)
       navigate('/dashboard')
     })
