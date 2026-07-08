@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, Filter, Loader } from 'lucide-react'
-import { API_ENDPOINTS } from '../../config'
+import { API_ENDPOINTS, apiFetch } from '../../config'
+
 
 export default function TestRunHistory() {
   const navigate = useNavigate()
@@ -11,7 +12,7 @@ export default function TestRunHistory() {
   const [filterStatus, setFilterStatus] = useState('ALL')
 
   useEffect(() => {
-    fetch(API_ENDPOINTS.testRuns)
+    apiFetch(API_ENDPOINTS.testRuns)
       .then(res => {
         if (!res.ok) throw new Error('API fetch error')
         return res.json()

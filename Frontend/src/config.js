@@ -39,3 +39,15 @@ export const API_ENDPOINTS = {
   reports:         `${API_BASE_URL}/reports`,
   chatgptInsights: `${API_BASE_URL}/chatgpt-insights`,
 }
+
+// ===== HELPER: Tự động gắn JWT token vào mọi request =====
+// Dùng apiFetch thay cho fetch() để không cần gửi token thủ công từng nơi
+export async function apiFetch(url, options = {}) {
+  const token = localStorage.getItem('token')
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(options.headers || {}),
+  }
+  if (token) headers['Authorization'] = token
+  return fetch(url, { ...options, headers })
+}

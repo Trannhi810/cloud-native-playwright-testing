@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Plus, Edit2, Trash2, Shield, User, Eye, Loader } from 'lucide-react'
-import { API_ENDPOINTS } from '../../config'
+import { API_ENDPOINTS, apiFetch } from '../../config'
 
 const roleInfo = {
   admin: { label: 'Admin', icon: Shield, color: 'purple', desc: 'Toàn quyền hệ thống' },

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Plus, Trash2, Mail, Globe, Loader, AlertCircle } from 'lucide-react'
-import { API_ENDPOINTS } from '../../config'
+import { API_ENDPOINTS, apiFetch } from '../../config'
 
 export default function EmailConfig() {
   const [emails, setEmails] = useState([])
@@ -27,12 +27,12 @@ export default function EmailConfig() {
     const emailToSave = newEmail
     setEmails(prev => [...prev, { email_address: emailToSave, active: true }])
     setNewEmail('')
-    
+
     try {
       await fetch(API_ENDPOINTS.emailConfig, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email_address: emailToSave, active: true })
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email_address: emailToSave, active: true })
       })
     } catch (e) { console.error(e) }
   }
@@ -48,9 +48,9 @@ export default function EmailConfig() {
     setEmails(prev => prev.map(e => e.email_address === email ? { ...e, active: !currentActive } : e))
     try {
       await fetch(API_ENDPOINTS.emailConfig, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email_address: email, active: !currentActive })
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email_address: email, active: !currentActive })
       })
     } catch (e) { console.error(e) }
   }

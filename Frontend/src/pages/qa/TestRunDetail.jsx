@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Download, ExternalLink, CheckCircle, XCircle, Clock, Camera } from 'lucide-react'
-import { API_ENDPOINTS } from '../../config'
+import { API_ENDPOINTS, apiFetch } from '../../config'
 
 export default function TestRunDetail() {
   const { id } = useParams()

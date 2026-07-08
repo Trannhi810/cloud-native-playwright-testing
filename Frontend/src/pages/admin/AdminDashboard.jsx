@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { Activity, CheckCircle, AlertTriangle, Clock, DollarSign, ArrowUpRight } from 'lucide-react'
-import { API_ENDPOINTS } from '../../config'
+import { API_ENDPOINTS, apiFetch } from '../../config'
 
 const initialTrend = []
 const initialPie = [{ name: 'Chưa có dữ liệu', value: 1, color: '#e2e8f0' }]

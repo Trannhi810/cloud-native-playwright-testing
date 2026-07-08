@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Plus, Upload, Edit2, Trash2, Download, TestTube, Loader } from 'lucide-react'
-import { API_ENDPOINTS } from '../../config'
+import { API_ENDPOINTS, apiFetch } from '../../config'
+
 
 export default function TestSuiteManagement() {
   const [suites, setSuites] = useState([])
@@ -14,7 +15,7 @@ export default function TestSuiteManagement() {
   const [uploading, setUploading] = useState(false)
 
   useEffect(() => {
-    fetch(API_ENDPOINTS.testSuites)
+    apiFetch(API_ENDPOINTS.testSuites)
       .then(res => {
         if (!res.ok) throw new Error('API fetch error')
         return res.json()
@@ -31,10 +32,10 @@ export default function TestSuiteManagement() {
   }, [])
 
   const refetch = () => {
-    fetch(API_ENDPOINTS.testSuites)
+    apiFetch(API_ENDPOINTS.testSuites)
       .then(r => r.json())
       .then(data => setSuites(Array.isArray(data) ? data : data.items || []))
-      .catch(() => {})
+      .catch(() => { })
   }
 
   const readFile = (file) => {
@@ -62,9 +63,9 @@ export default function TestSuiteManagement() {
     if (editing) {
       setSuites(s => s.map(x => (x.id === editing || x.suite_id === editing) ? { ...x, ...form } : x))
     } else {
-      setSuites(s => [...s, { ...form, id: tempId, suite_id: tempId, cases: 0, size: scriptFile ? `${(scriptFile.size/1024).toFixed(1)} KB` : '—', updatedAt: 'Vừa xong', status: 'active' }])
+      setSuites(s => [...s, { ...form, id: tempId, suite_id: tempId, cases: 0, size: scriptFile ? `${(scriptFile.size / 1024).toFixed(1)} KB` : '—', updatedAt: 'Vừa xong', status: 'active' }])
     }
-    
+
     setShowModal(false); setEditing(null)
     setForm({ name: '', website: '', description: '' })
     setScriptFile(null); setScriptContent('')
@@ -78,9 +79,8 @@ export default function TestSuiteManagement() {
         description: form.description,
         test_script: scriptContent || ''
       }
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method: method,
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
       if (!res.ok) {
@@ -98,7 +98,7 @@ export default function TestSuiteManagement() {
 
   const del = async (id) => {
     try {
-      await fetch(`${API_ENDPOINTS.testSuites}/${id}`, { method: 'DELETE' })
+      await apiFetch(`${API_ENDPOINTS.testSuites}/${id}`, { method: 'DELETE' })
       setSuites(s => s.filter(x => x.id !== id))
     } catch (err) {
       console.error('Lỗi khi xóa suite:', err)
@@ -133,7 +133,7 @@ export default function TestSuiteManagement() {
         style={{ borderStyle: 'dashed', borderColor: dragOver ? 'var(--accent-blue)' : 'var(--border)', background: dragOver ? 'rgba(59,130,246,0.05)' : 'transparent', cursor: 'pointer', textAlign: 'center', marginBottom: 24, transition: 'all 0.2s' }}
         onDragOver={e => { e.preventDefault(); setDragOver(true) }}
         onDragLeave={() => setDragOver(false)}
-        onDrop={e => { 
+        onDrop={e => {
           e.preventDefault()
           setDragOver(false)
           const file = e.dataTransfer.files?.[0]

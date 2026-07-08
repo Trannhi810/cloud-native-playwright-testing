@@ -701,7 +701,8 @@ def lambda_handler(event, context):
         return {
             'statusCode': 500,
             'headers': {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
             },
             'body': json.dumps({
                 'message': 'Đã có lỗi xảy ra trên server',

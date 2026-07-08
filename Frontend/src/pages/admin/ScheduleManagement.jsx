@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Plus, Edit2, Trash2, Clock, Play, Pause, Loader } from 'lucide-react'
-import { API_ENDPOINTS } from '../../config'
+import { API_ENDPOINTS, apiFetch } from '../../config'
+
 
 export default function ScheduleManagement() {
   const [schedules, setSchedules] = useState([])
@@ -10,7 +11,7 @@ export default function ScheduleManagement() {
   const [editing, setEditing] = useState(null)
 
   useEffect(() => {
-    fetch(API_ENDPOINTS.schedules)
+    apiFetch(API_ENDPOINTS.schedules)
       .then(res => {
         if (!res.ok) throw new Error('API fetch error')
         return res.json()
@@ -27,7 +28,7 @@ export default function ScheduleManagement() {
   }, [])
 
   const refetch = () => {
-    fetch(API_ENDPOINTS.schedules)
+    apiFetch(API_ENDPOINTS.schedules)
       .then(r => r.json())
       .then(data => setSchedules(Array.isArray(data) ? data : data.Schedules || data.items || []))
       .catch(() => {})
@@ -45,9 +46,8 @@ export default function ScheduleManagement() {
     try {
       const url = editing ? `${API_ENDPOINTS.schedules}/${tempId}` : API_ENDPOINTS.schedules
       const method = editing ? 'PUT' : 'POST'
-      await fetch(url, {
+      await apiFetch(url, {
         method: method,
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form)
       })
     } catch (err) {
@@ -59,7 +59,7 @@ export default function ScheduleManagement() {
 
   const del = async (id) => {
     try {
-      await fetch(`${API_ENDPOINTS.schedules}/${id}`, { method: 'DELETE' })
+      await apiFetch(`${API_ENDPOINTS.schedules}/${id}`, { method: 'DELETE' })
       setSchedules(s => s.filter(x => x.id !== id))
     } catch (err) {
       console.error('Lỗi khi xóa lịch:', err)

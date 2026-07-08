@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { TestTube, Zap, TrendingUp, Clock, ArrowUpRight, Loader } from 'lucide-react'
-import { API_ENDPOINTS } from '../../config'
+import { API_ENDPOINTS, apiFetch } from '../../config'
+
 
 const initialStats = [
   { label: 'Test Suites', value: '0', sub: 'Chưa có website', color: 'var(--blue)', bg: 'var(--blue-light)', Icon: TestTube, stripe: 'var(--grad-blue)' },
@@ -17,7 +18,7 @@ export default function QADashboard() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch(API_ENDPOINTS.stats)
+    apiFetch(API_ENDPOINTS.stats)
       .then(res => {
         if (!res.ok) throw new Error('API fetch error')
         return res.json()

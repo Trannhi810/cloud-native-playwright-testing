@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Zap, AlertCircle, CheckCircle, Server, Activity, Box, ArrowRight, Sparkles } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { API_ENDPOINTS } from '../../config'
+import { API_ENDPOINTS, apiFetch } from '../../config'
+
 
 export default function ManualTrigger() {
   const [form, setForm] = useState({ website: '', env: 'Staging', suite: '', priority: 'normal' })
@@ -13,7 +14,7 @@ export default function ManualTrigger() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    fetch(API_ENDPOINTS.testSuites)
+    apiFetch(API_ENDPOINTS.testSuites)
       .then(res => res.json())
       .then(data => {
         const dataArray = Array.isArray(data) ? data : data.items || []
@@ -35,7 +36,7 @@ export default function ManualTrigger() {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': token
         },
         body: JSON.stringify({
           website:   form.website,

@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react'
 import { Search, Filter, Loader } from 'lucide-react'
-import { API_ENDPOINTS } from '../../config'
+import { API_ENDPOINTS, apiFetch } from '../../config'
+
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token')
+  return token ? { 'Authorization': token } : {}
+}
 
 const actionColors = {
   CREATE_SCHEDULE: 'blue', TRIGGER_TEST: 'green', UPDATE_USER: 'yellow',
@@ -15,7 +20,7 @@ export default function AuditLog() {
   const [filterAction, setFilterAction] = useState('ALL')
 
   useEffect(() => {
-    fetch(API_ENDPOINTS.auditLogs)
+    fetch(API_ENDPOINTS.auditLogs, { headers: getAuthHeaders() })
       .then(res => {
         if (!res.ok) throw new Error('API fetch error')
         return res.json()
