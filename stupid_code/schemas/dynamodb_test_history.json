@@ -1,0 +1,22 @@
+{
+  "TableName": "playwright-test-history",
+  "BillingMode": "PAY_PER_REQUEST",
+  "KeySchema": [
+    {
+      "AttributeName": "task_id",
+      "KeyType": "HASH"
+    }
+  ],
+  "AttributeDefinitions": [
+    {
+      "AttributeName": "task_id",
+      "AttributeType": "S"
+    }
+  ],
+  "Tags": [
+    {
+      "Key": "Project",
+      "Value": "playwright-automation"
+    }
+  ]
+}

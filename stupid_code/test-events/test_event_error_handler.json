@@ -1,0 +1,20 @@
+{
+  "Records": [
+    {
+      "body": "{\"task_id\": \"test-error-001\", \"target_url\": \"https://google.com\", \"test_script\": \"login.spec.ts\", \"triggered_by\": \"manual\"}",
+      "messageId": "error-test-msg-001",
+      "receiptHandle": "mock-receipt-handle",
+      "attributes": {
+        "ApproximateReceiveCount": "4",
+        "SentTimestamp": "1720000000000",
+        "SenderId": "MOCK_SENDER",
+        "ApproximateFirstReceiveTimestamp": "1720000001000"
+      },
+      "messageAttributes": {},
+      "md5OfBody": "mock-md5",
+      "eventSource": "aws:sqs",
+      "eventSourceARN": "arn:aws:sqs:ap-southeast-1:123456789012:playwright-dlq",
+      "awsRegion": "ap-southeast-1"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Báo cáo kiểm thử Playwright</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="container">
+    <h2>Báo cáo Playwright Automation</h2>
+
+    <div class="info-box">
+      <p><b>Task ID:</b> {{task_id}}</p>
+      <p><b>URL kiểm thử:</b> <a href="{{target_url}}" target="_blank">{{target_url}}</a></p>
+      <p><b>Trạng thái:</b> {{status_label}}</p>
+    </div>
+
+    <h3>AI Tóm tắt kết quả:</h3>
+    <div class="summary">
+      {{ai_summary}}
+    </div>
+
+    {{report_link}}
+
+    <div class="footer">
+      Email này được gửi tự động từ hệ thống Playwright Automation x AWS.
+    </div>
+  </div>
+</body>
+
+</html>

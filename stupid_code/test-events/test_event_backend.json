@@ -1,0 +1,18 @@
+{
+  "rawPath": "/trigger",
+  "requestContext": {
+    "http": {
+      "method": "POST"
+    },
+    "authorizer": {
+      "jwt": {
+        "claims": {
+          "cognito:groups": [
+            "Admin"
+          ]
+        }
+      }
+    }
+  },
+  "body": "{\"target_url\": \"https://google.com\", \"test_script\": \"login.spec.ts\"}"
+}

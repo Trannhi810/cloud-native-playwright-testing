@@ -1,0 +1,40 @@
+# Project: Hệ thống tự động kiểm thử Playwright bằng Docker trên AWS
+
+## Mô tả dự án
+Nền tảng kiểm thử tự động nội bộ End-to-End, kiến trúc Serverless/Cloud-Native trên AWS. Sử dụng Playwright để giả lập hành vi người dùng, ghi log, xuất báo cáo và dùng AI tóm tắt lỗi.
+
+## Ngôn ngữ & SDK
+- Ngôn ngữ: Python 3.14
+- AWS SDK: boto3
+- Không dùng thư viện ngoài nếu không cần thiết
+
+## Kiến trúc AWS
+- Frontend: S3 + CloudFront
+- Auth: Amazon Cognito + API Gateway (JWT)
+- Queue: SQS Task Queue + Dead Letter Queue
+- Orchestration: Lambda API Backend, Lambda Coordinator, Lambda Error Handler, EventBridge
+- Execution: ECS Fargate + ECR (Docker Image chứa Playwright)
+- Post-processing: Lambda Post-processing + ChatGPT API
+- Storage: S3 (báo cáo HTML/JSON, ảnh lỗi), DynamoDB (lịch sử test, cấu hình)
+- Monitoring: CloudWatch Logs + Alarms
+- Notification: Amazon SES
+- Security: IAM, Secrets Manager, VPC (Private Subnet, NAT Gateway, VPC Endpoints)
+
+## Phạm vi file này (Orchestration & Queue)
+- lambda_api_backend.py: nhận request từ API Gateway, đẩy message vào SQS
+- lambda_coordinator.py: đọc message từ SQS, gọi ECS RunTask với container override truyền env vars
+- lambda_error_handler.py: đọc message từ DLQ, ghi lỗi vào DynamoDB
+
+## Quy tắc viết code
+- Mọi biến config (tên queue, cluster, table, subnet, security group) đều lấy từ os.environ, tuyệt đối không hardcode
+- Không hardcode AWS credentials
+- Mọi hàm đều có try/except xử lý lỗi rõ ràng
+- Log đầy đủ bằng print() hoặc logging để đẩy lên CloudWatch
+- Trả về HTTP response đúng format cho API Gateway (statusCode, body)
+- Code ngắn gọn, có comment giải thích từng bước
+
+## Không được làm
+- Không hardcode bất kỳ giá trị nào như URL, tên resource, region
+- Không dùng thư viện ngoài ngoài boto3, json, os, logging
+- Không tự thêm logic ngoài yêu cầu
+- Không bỏ qua xử lý lỗi

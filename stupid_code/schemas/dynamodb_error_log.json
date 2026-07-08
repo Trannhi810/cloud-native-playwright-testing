@@ -1,0 +1,22 @@
+{
+  "TableName": "playwright-error-log",
+  "BillingMode": "PAY_PER_REQUEST",
+  "KeySchema": [
+    {
+      "AttributeName": "error_id",
+      "KeyType": "HASH"
+    }
+  ],
+  "AttributeDefinitions": [
+    {
+      "AttributeName": "error_id",
+      "AttributeType": "S"
+    }
+  ],
+  "Tags": [
+    {
+      "Key": "Project",
+      "Value": "playwright-automation"
+    }
+  ]
+}
