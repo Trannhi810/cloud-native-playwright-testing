@@ -1,6 +1,7 @@
 import json
 import os
 import boto3
+import botocore
 import logging
 import datetime
 import urllib.request
@@ -81,9 +82,21 @@ def get_cloudwatch_logs(task_arn, log_group):
 def get_report_presigned_url(task_id, report_bucket):
     """
     Tạo S3 Presigned URL cho file báo cáo HTML của phiên test.
+    Đã bổ sung logic kiểm tra sự tồn tại của file trước khi tạo URL.
     """
     try:
         report_key = f"reports/{task_id}/index.html"
+        try:
+            s3.head_object(Bucket=report_bucket, Key=report_key)
+        except botocore.exceptions.ClientError as e:
+            error_code = e.response.get('Error', {}).get('Code')
+            if error_code in ['404', '403']:
+                logger.warning(f"Report index.html not found for task {task_id}. Skipping URL generation.")
+                return ""
+            else:
+                logger.error(f"Error checking report existence: {str(e)}")
+                return ""
+
         url = s3.generate_presigned_url(
             'get_object',
             Params={'Bucket': report_bucket, 'Key': report_key},
