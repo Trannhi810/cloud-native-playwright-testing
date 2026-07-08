@@ -5,7 +5,6 @@ import { ProtectedRoute, GuestRoute } from './components/ProtectedRoute'
 import LoginPage from './pages/LoginPage'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import ScheduleManagement from './pages/admin/ScheduleManagement'
-import UserManagement from './pages/admin/UserManagement'
 import EmailConfig from './pages/admin/EmailConfig'
 import AuditLog from './pages/admin/AuditLog'
 import QADashboard from './pages/qa/QADashboard'
@@ -78,11 +77,6 @@ export default function App() {
             <Route path="schedules" element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <ScheduleManagement />
-              </ProtectedRoute>
-            } />
-            <Route path="users" element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <UserManagement />
               </ProtectedRoute>
             } />
             <Route path="email-config" element={

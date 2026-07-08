@@ -337,15 +337,46 @@ def handle_get_test_runs(run_id=None):
 
 def handle_get_users():
     try:
-        table_name = os.environ.get('USERS_TABLE', 'playwright-users')
-        table = dynamodb.Table(table_name)
-        response = table.scan()
+        user_pool_id = os.environ.get('COGNITO_USER_POOL_ID')
+        if not user_pool_id:
+            return {'statusCode': 500, 'body': json.dumps({'message': 'Thiếu biến môi trường COGNITO_USER_POOL_ID'})}
+        
+        response = cognito.list_users(UserPoolId=user_pool_id)
+        users = []
+        for u in response.get('Users', []):
+            attrs = {a['Name']: a['Value'] for a in u.get('Attributes', [])}
+            email = attrs.get('email', '')
+            name = attrs.get('name', email.split('@')[0] if email else 'Unknown')
+            role = attrs.get('custom:role', 'qa')
+            
+            status_map = {
+                'CONFIRMED': 'active',
+                'UNCONFIRMED': 'inactive',
+                'FORCE_CHANGE_PASSWORD': 'active'
+            }
+            
+            # Format date nếu có
+            last_login = '—'
+            if u.get('UserLastModifiedDate'):
+                last_login = u['UserLastModifiedDate'].strftime('%Y-%m-%d %H:%M:%S')
+
+            users.append({
+                'id': u.get('Username'),
+                'user_id': u.get('Username'),
+                'name': name,
+                'email': email,
+                'role': role,
+                'status': status_map.get(u.get('UserStatus'), 'active'),
+                'lastLogin': last_login
+            })
+            
         return {
             'statusCode': 200,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps(response.get('Items', []), ensure_ascii=False)
+            'body': json.dumps(users, ensure_ascii=False)
         }
     except Exception as e:
+        logger.error(f"Error fetching users from Cognito: {str(e)}")
         return {'statusCode': 500, 'body': json.dumps({'error': str(e)})}
 
 def handle_post_users(body):

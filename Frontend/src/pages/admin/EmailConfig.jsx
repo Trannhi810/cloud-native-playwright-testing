@@ -8,13 +8,13 @@ export default function EmailConfig() {
   const [newEmail, setNewEmail] = useState('')
 
   const refetch = () => {
-    fetch(API_ENDPOINTS.emailConfig)
+    apiFetch(API_ENDPOINTS.emailConfig)
       .then(res => res.json())
       .then(data => setEmails(Array.isArray(data) ? data : data.items || []))
   }
 
   useEffect(() => {
-    fetch(API_ENDPOINTS.emailConfig)
+    apiFetch(API_ENDPOINTS.emailConfig)
       .then(res => res.json())
       .then(data => {
         setEmails(Array.isArray(data) ? data : data.items || [])
@@ -29,7 +29,7 @@ export default function EmailConfig() {
     setNewEmail('')
 
     try {
-      await fetch(API_ENDPOINTS.emailConfig, {
+      await apiFetch(API_ENDPOINTS.emailConfig, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email_address: emailToSave, active: true })
@@ -40,14 +40,14 @@ export default function EmailConfig() {
   const delEmail = async (email) => {
     setEmails(prev => prev.filter(e => e.email_address !== email))
     try {
-      await fetch(`${API_ENDPOINTS.emailConfig}/${email}`, { method: 'DELETE' })
+      await apiFetch(`${API_ENDPOINTS.emailConfig}/${email}`, { method: 'DELETE' })
     } catch (e) { console.error(e) }
   }
 
   const toggleActive = async (email, currentActive) => {
     setEmails(prev => prev.map(e => e.email_address === email ? { ...e, active: !currentActive } : e))
     try {
-      await fetch(API_ENDPOINTS.emailConfig, {
+      await apiFetch(API_ENDPOINTS.emailConfig, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email_address: email, active: !currentActive })

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Eye, Monitor, Loader } from 'lucide-react'
-import { API_ENDPOINTS } from '../../config'
+import { API_ENDPOINTS, apiFetch } from '../../config'
 
 const initialStats = [
   { label: 'Tổng lần chạy hôm nay', value: '0', sub: 'Chưa có dữ liệu', color: 'var(--blue)', bg: 'var(--blue-light)', stripe: 'var(--grad-blue)' },
@@ -17,7 +17,7 @@ export default function ViewerDashboard() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch(API_ENDPOINTS.stats)
+    apiFetch(API_ENDPOINTS.stats)
       .then(res => {
         if (!res.ok) throw new Error('API fetch error')
         return res.json()
@@ -26,7 +26,10 @@ export default function ViewerDashboard() {
         // Backend /stats trả về: { stats, pieData, trendData, recentRuns }
         // Map sang format mà ViewerDashboard dùng
         setData({
-          stats: apiData.stats || initialStats,    // dùng "stats" (có sẵn từ backend)
+          stats: initialStats.map((base, i) => {
+            const be = (apiData.stats || [])[i]
+            return be ? { ...base, ...be } : base
+          }),
           trendData: apiData.trendData || [],       // dùng "trendData" (có sẵn từ backend)
           recentRuns: apiData.recentRuns || [],     // dùng "recentRuns" (có sẵn từ backend)
           sites: []                                 // backend chưa có endpoint sites, để rỗng

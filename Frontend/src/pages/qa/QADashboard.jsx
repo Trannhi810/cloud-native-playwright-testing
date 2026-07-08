@@ -27,7 +27,10 @@ export default function QADashboard() {
         // Backend /stats trả về: { stats, pieData, trendData, recentRuns }
         // Map sang format mà QADashboard dùng
         setData({
-          stats: apiData.stats || initialStats,      // dùng "stats" (có sẵn từ backend)
+          stats: initialStats.map((base, i) => {
+            const be = (apiData.stats || [])[i]
+            return be ? { ...base, ...be } : base
+          }),
           weekData: apiData.trendData || [],          // "trendData" → weekData cho biểu đồ
           suites: apiData.recentRuns?.slice(0, 3) || [] // 3 run gần nhất làm preview suite
         })

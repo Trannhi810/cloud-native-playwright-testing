@@ -10,7 +10,6 @@ import {
 const adminNav = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/schedules', icon: Calendar, label: 'Lịch kiểm thử' },
-  { to: '/users', icon: Users, label: 'Người dùng' },
   { to: '/email-config', icon: Mail, label: 'Cấu hình Email' },
   { to: '/audit-log', icon: FileText, label: 'Audit Log' },
 ]
@@ -36,8 +35,8 @@ const roleStyle = {
 
 const pageTitles = {
   '/dashboard': 'Dashboard', '/schedules': 'Lịch kiểm thử',
-  '/users': 'Quản lý người dùng', '/email-config': 'Cấu hình Email',
-  '/audit-log': 'Audit Log', '/qa-dashboard': 'QA Dashboard',
+  '/email-config': 'Cấu hình Email',
+  '/audit-log': 'Audit Log & Users', '/qa-dashboard': 'QA Dashboard',
   '/test-suites': 'Test Suites', '/trigger': 'Kích hoạt thủ công',
   '/test-runs': 'Lịch sử kiểm thử', '/viewer': 'Developer Dashboard',
 }

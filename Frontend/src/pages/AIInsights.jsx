@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Bot, AlertTriangle } from 'lucide-react'
-import { API_ENDPOINTS } from '../config'
+import { API_ENDPOINTS, apiFetch } from '../config'
 
 export default function AIInsights() {
   const [data, setData] = useState(null)
@@ -8,7 +8,7 @@ export default function AIInsights() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    fetch(API_ENDPOINTS.chatgptInsights)
+    apiFetch(API_ENDPOINTS.chatgptInsights)
       .then(res => {
         if (!res.ok) throw new Error('API fetch error')
         return res.json()

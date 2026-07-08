@@ -46,7 +46,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     // Gọi API /stats khi component mount
-    fetch(API_ENDPOINTS.stats)
+    apiFetch(API_ENDPOINTS.stats)
       .then(res => {
         if (!res.ok) throw new Error('API returns empty/error')
         return res.json()
@@ -55,7 +55,10 @@ export default function AdminDashboard() {
         // Backend cần trả về đúng cấu trúc này để tự động map vào giao diện
         // Ví dụ: { stats: [...], trendData: [...], pieData: [...], recentRuns: [...] }
         setData({
-          stats: apiData.stats || initialStats,
+          stats: initialStats.map((base, i) => {
+            const be = (apiData.stats || [])[i]
+            return be ? { ...base, ...be } : base
+          }),
           trendData: apiData.trendData || initialTrend,
           pieData: apiData.pieData || initialPie,
           recentRuns: apiData.recentRuns || initialRecent

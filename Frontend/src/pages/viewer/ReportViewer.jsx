@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, ExternalLink, Lock, FileText, AlertTriangle } from 'lucide-react'
-import { API_ENDPOINTS } from '../../config'
+import { API_ENDPOINTS, apiFetch } from '../../config'
 
 export default function ReportViewer() {
   const { id } = useParams()
@@ -11,7 +11,7 @@ export default function ReportViewer() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    fetch(`${API_ENDPOINTS.reports}/${id}`)
+    apiFetch(`${API_ENDPOINTS.reports}/${id}`)
       .then(res => {
         if (!res.ok) throw new Error('API fetch error')
         return res.json()
