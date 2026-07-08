@@ -6,6 +6,7 @@ import { API_ENDPOINTS, apiFetch } from '../../config'
 export default function ScheduleManagement() {
   const [schedules, setSchedules] = useState([])
   const [loading, setLoading] = useState(true)
+  const [scheduleError, setScheduleError] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [form, setForm] = useState({ name: '', website: '', env: 'Production', cron: '0 2 * * *' })
   const [editing, setEditing] = useState(null)
@@ -30,28 +31,40 @@ export default function ScheduleManagement() {
   const refetch = () => {
     apiFetch(API_ENDPOINTS.schedules)
       .then(r => r.json())
-      .then(data => setSchedules(Array.isArray(data) ? data : data.Schedules || data.items || []))
-      .catch(() => {})
+      .then(data => {
+        if (data.message || data.error) {
+          setScheduleError(data.message || data.error)
+          setSchedules([])
+        } else {
+          setSchedules(Array.isArray(data) ? data : data.Schedules || data.items || [])
+        }
+        setLoading(false)
+      })
+      .catch(err => { setScheduleError(err.message); setLoading(false) })
   }
 
   const handleSave = async () => {
-    const tempId = editing || Date.now().toString()
-    if (editing) {
-      setSchedules(s => s.map(x => x.id === editing ? { ...x, ...form } : x))
-    } else {
-      setSchedules(s => [...s, { ...form, id: tempId, humanCron: form.cron, status: 'active', lastRun: '—', nextRun: '—' }])
-    }
-    setShowModal(false); setEditing(null); setForm({ name: '', website: '', env: 'Production', cron: '0 2 * * *' })
-
     try {
-      const url = editing ? `${API_ENDPOINTS.schedules}/${tempId}` : API_ENDPOINTS.schedules
+      const url = editing ? `${API_ENDPOINTS.schedules}/${editing}` : API_ENDPOINTS.schedules
       const method = editing ? 'PUT' : 'POST'
-      await apiFetch(url, {
+      const res = await apiFetch(url, {
         method: method,
         body: JSON.stringify(form)
       })
+      
+      const data = await res.json()
+      if (!res.ok || data.error || data.message?.includes('Lỗi')) {
+        throw new Error(data.error || data.message || 'Lỗi không xác định từ server')
+      }
+      
+      // Thành công
+      setShowModal(false)
+      setEditing(null)
+      setForm({ name: '', website: '', env: 'Production', cron: '0 2 * * *' })
+      refetch() // Gọi lại API để load danh sách mới chuẩn nhất
     } catch (err) {
       console.error('Lỗi khi lưu lịch:', err)
+      setScheduleError('Không thể lưu lịch: ' + err.message)
     }
   }
 
@@ -96,6 +109,8 @@ export default function ScheduleManagement() {
             <tbody>
               {loading ? (
                 <tr><td colSpan="8" style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>Đang tải dữ liệu cấu hình...</td></tr>
+              ) : scheduleError ? (
+                <tr><td colSpan="8" style={{ textAlign: 'center', padding: '30px', color: '#ef4444' }}>Lỗi: {scheduleError}</td></tr>
               ) : schedules.length === 0 ? (
                 <tr><td colSpan="8" style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>Chưa có lịch trình kiểm thử nào được thiết lập.</td></tr>
               ) : (
@@ -104,8 +119,8 @@ export default function ScheduleManagement() {
                     <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{sc.name}</td>
                     <td style={{ color: 'var(--accent-cyan)', fontSize: 13 }}>{sc.website}</td>
                     <td><span className={`badge badge-${sc.env === 'Production' ? 'red' : sc.env === 'Staging' ? 'yellow' : 'blue'}`}>{sc.env}</span></td>
-                    <td>
-                      <div style={{ fontSize: 13 }}>{sc.humanCron}</div>
+                    <td style={{ whiteSpace: 'nowrap' }}>
+                      <div style={{ fontSize: 13 }}>{sc.humanCron || '—'}</div>
                       <code style={{ fontSize: 11, color: 'var(--text-muted)' }}>{sc.cron}</code>
                     </td>
                     <td>
@@ -147,7 +162,7 @@ export default function ScheduleManagement() {
               <label className="form-label">URL Website</label>
               <input className="form-input" value={form.website} onChange={e => setForm(f => ({ ...f, website: e.target.value }))} placeholder="shop.company.com" />
             </div>
-    <div className="grid-2">
+            <div className="grid-2">
               <div className="form-group">
                 <label className="form-label">Môi trường</label>
                 <select className="form-select" value={form.env} onChange={e => setForm(f => ({ ...f, env: e.target.value }))}>
@@ -169,7 +184,7 @@ export default function ScheduleManagement() {
                     if (parts.length === 5) {
                       const [m, h, d, mo, w] = parts;
                       if (!isNaN(m) && !isNaN(h)) {
-                        hint = `Chạy lúc ${h.padStart(2, '0')}:${m.padStart(2, '0')} ${w !== '*' ? (w.includes('-') ? 'từ ' + w.replace('-', ' đến ') : 'vào Thứ ' + (w==='0'?'CN':(parseInt(w)+1))) : 'mỗi ngày'}`;
+                        hint = `Chạy lúc ${h.padStart(2, '0')}:${m.padStart(2, '0')} ${w !== '*' ? (w.includes('-') ? 'từ ' + w.replace('-', ' đến ') : 'vào Thứ ' + (w === '0' ? 'CN' : (parseInt(w) + 1))) : 'mỗi ngày'}`;
                       } else hint = 'Biểu thức tùy chỉnh';
                     } else if (c.length > 0) hint = 'Biểu thức chưa hoàn chỉnh';
                   }

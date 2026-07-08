@@ -19,7 +19,7 @@ def handle_get_history():
     try:
         table_name = os.environ.get('TEST_HISTORY_TABLE')
         if not table_name:
-            return {'statusCode': 500, 'body': json.dumps({'message': 'Thiếu biến môi trường TEST_HISTORY_TABLE'})}
+            return {'statusCode': 500, 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'message': 'Thiếu biến môi trường TEST_HISTORY_TABLE'})}
             
         table = dynamodb.Table(table_name)
         response = table.scan()
@@ -34,13 +34,13 @@ def handle_get_history():
         }
     except Exception as e:
         logger.error(f"Error fetching history: {str(e)}")
-        return {'statusCode': 500, 'body': json.dumps({'message': 'Lỗi server', 'error': str(e)})}
+        return {'statusCode': 500, 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'message': 'Lỗi server', 'error': str(e)})}
 
 def handle_get_reports():
     try:
         table_name = os.environ.get('TEST_HISTORY_TABLE')
         if not table_name:
-            return {'statusCode': 500, 'body': json.dumps({'message': 'Thiếu biến môi trường TEST_HISTORY_TABLE'})}
+            return {'statusCode': 500, 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'message': 'Thiếu biến môi trường TEST_HISTORY_TABLE'})}
             
         table = dynamodb.Table(table_name)
         response = table.scan(
@@ -56,12 +56,48 @@ def handle_get_reports():
         }
     except Exception as e:
         logger.error(f"Error fetching reports: {str(e)}")
-        return {'statusCode': 500, 'body': json.dumps({'message': 'Lỗi server', 'error': str(e)})}
+        return {'statusCode': 500, 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'message': 'Lỗi server', 'error': str(e)})}
 
 def handle_get_schedules():
     try:
         response = scheduler.list_schedules()
-        schedules = response.get('Schedules', [])
+        schedules_raw = response.get('Schedules', [])
+        
+        schedules = []
+        for s in schedules_raw:
+            name = s.get('Name')
+            # Lấy chi tiết từng schedule để có cron và input
+            try:
+                detail = scheduler.get_schedule(Name=name)
+                state = detail.get('State', 'DISABLED')
+                expr = detail.get('ScheduleExpression', '')
+                
+                # Bóc tách cron(0 2 * * ? *) -> 0 2 * * *
+                cron_str = expr.replace('cron(', '').replace(')', '')
+                parts = cron_str.split()
+                if len(parts) == 6:
+                    # Chuyển ? thành * và bỏ field year
+                    parts = [p if p != '?' else '*' for p in parts[:5]]
+                    cron_str = ' '.join(parts)
+                
+                # Parse Input
+                target = detail.get('Target', {})
+                input_str = target.get('Input', '{}')
+                input_data = json.loads(input_str)
+                
+                schedules.append({
+                    'id': name,
+                    'name': name,
+                    'website': input_data.get('website', 'N/A'),
+                    'env': input_data.get('env', 'Production'),
+                    'cron': cron_str,
+                    'humanCron': f'Cron expression: {cron_str}',
+                    'status': 'active' if state == 'ENABLED' else 'inactive',
+                    'lastRun': '—',
+                    'nextRun': '—'
+                })
+            except Exception as e:
+                logger.warning(f"Failed to get details for schedule {name}: {str(e)}")
         
         return {
             'statusCode': 200,
@@ -70,13 +106,17 @@ def handle_get_schedules():
         }
     except Exception as e:
         logger.error(f"Error fetching schedules: {str(e)}")
-        return {'statusCode': 500, 'body': json.dumps({'message': 'Lỗi server, hãy đảm bảo Lambda có quyền scheduler:ListSchedules', 'error': str(e)})}
+        return {
+            'statusCode': 500, 
+            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'message': 'Lỗi server, hãy đảm bảo Lambda có quyền scheduler:ListSchedules', 'error': str(e)}, ensure_ascii=False)
+        }
 
 def handle_get_test_suites():
     try:
         table_name = os.environ.get('TEST_SUITES_TABLE')
         if not table_name:
-            return {'statusCode': 500, 'body': json.dumps({'message': 'Thiếu biến môi trường TEST_SUITES_TABLE'})}
+            return {'statusCode': 500, 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'message': 'Thiếu biến môi trường TEST_SUITES_TABLE'})}
             
         table = dynamodb.Table(table_name)
         response = table.scan()
@@ -106,7 +146,7 @@ def handle_get_test_suites():
         }
     except Exception as e:
         logger.error(f"Error fetching test suites: {str(e)}")
-        return {'statusCode': 500, 'body': json.dumps({'message': 'Lỗi server', 'error': str(e)})}
+        return {'statusCode': 500, 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'message': 'Lỗi server', 'error': str(e)})}
 
 def handle_post_test_suites(body):
     try:
@@ -166,13 +206,13 @@ def handle_post_test_suites(body):
         }
     except Exception as e:
         logger.error(f"Error creating test suite: {str(e)}")
-        return {'statusCode': 500, 'body': json.dumps({'error': str(e)})}
+        return {'statusCode': 500, 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': str(e)})}
 
 def handle_get_emails():
     try:
         table_name = os.environ.get('EMAIL_CONFIG_TABLE')
         if not table_name:
-            return {'statusCode': 500, 'body': json.dumps({'message': 'Thiếu biến môi trường EMAIL_CONFIG_TABLE'})}
+            return {'statusCode': 500, 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'message': 'Thiếu biến môi trường EMAIL_CONFIG_TABLE'})}
             
         table = dynamodb.Table(table_name)
         response = table.scan()
@@ -182,7 +222,7 @@ def handle_get_emails():
             'body': json.dumps(response.get('Items', []), ensure_ascii=False)
         }
     except Exception as e:
-        return {'statusCode': 500, 'body': json.dumps({'error': str(e)})}
+        return {'statusCode': 500, 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': str(e)})}
 
 def handle_post_emails(body):
     try:
@@ -204,13 +244,13 @@ def handle_post_emails(body):
             'body': json.dumps({'message': 'Thêm email thành công'}, ensure_ascii=False)
         }
     except Exception as e:
-        return {'statusCode': 500, 'body': json.dumps({'error': str(e)})}
+        return {'statusCode': 500, 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': str(e)})}
 
 def handle_get_stats():
     try:
         table_name = os.environ.get('TEST_HISTORY_TABLE')
         if not table_name:
-            return {'statusCode': 500, 'body': json.dumps({'message': 'Thiếu biến môi trường TEST_HISTORY_TABLE'})}
+            return {'statusCode': 500, 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'message': 'Thiếu biến môi trường TEST_HISTORY_TABLE'})}
         table = dynamodb.Table(table_name)
         response = table.scan()
         items = response.get('Items', [])
@@ -248,7 +288,7 @@ def handle_get_stats():
         }
     except Exception as e:
         logger.error(f"Error fetching stats: {str(e)}")
-        return {'statusCode': 500, 'body': json.dumps({'error': str(e)})}
+        return {'statusCode': 500, 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': str(e)})}
 
 def format_run_history_item(item):
     task_id = item.get('task_id', '')
@@ -307,7 +347,7 @@ def handle_get_test_runs(run_id=None):
     try:
         table_name = os.environ.get('TEST_HISTORY_TABLE')
         if not table_name:
-            return {'statusCode': 500, 'body': json.dumps({'message': 'Thiếu biến môi trường TEST_HISTORY_TABLE'})}
+            return {'statusCode': 500, 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'message': 'Thiếu biến môi trường TEST_HISTORY_TABLE'})}
         table = dynamodb.Table(table_name)
         if run_id:
             response = table.get_item(Key={'task_id': run_id})
@@ -333,21 +373,38 @@ def handle_get_test_runs(run_id=None):
             'body': json.dumps(mapped_items, ensure_ascii=False)
         }
     except Exception as e:
-        return {'statusCode': 500, 'body': json.dumps({'error': str(e)})}
+        return {'statusCode': 500, 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': str(e)})}
 
 def handle_get_users():
     try:
         user_pool_id = os.environ.get('COGNITO_USER_POOL_ID')
         if not user_pool_id:
-            return {'statusCode': 500, 'body': json.dumps({'message': 'Thiếu biến môi trường COGNITO_USER_POOL_ID'})}
+            return {
+                'statusCode': 500, 
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'message': 'Thiếu biến môi trường COGNITO_USER_POOL_ID'})
+            }
         
         response = cognito.list_users(UserPoolId=user_pool_id)
         users = []
         for u in response.get('Users', []):
             attrs = {a['Name']: a['Value'] for a in u.get('Attributes', [])}
             email = attrs.get('email', '')
+            # Parse name
             name = attrs.get('name', email.split('@')[0] if email else 'Unknown')
-            role = attrs.get('custom:role', 'qa')
+            
+            # Lấy Group để set role chính xác
+            role = 'qa'
+            try:
+                group_res = cognito.admin_list_groups_for_user(UserPoolId=user_pool_id, Username=u['Username'])
+                groups = group_res.get('Groups', [])
+                if groups:
+                    gn = groups[0].get('GroupName')
+                    if gn == 'Admin': role = 'admin'
+                    elif gn == 'QA': role = 'qa'
+                    elif gn == 'Developer': role = 'developer'
+            except Exception as e:
+                logger.warning(f"Không thể lấy group cho user {email}: {str(e)}")
             
             status_map = {
                 'CONFIRMED': 'active',
@@ -377,7 +434,11 @@ def handle_get_users():
         }
     except Exception as e:
         logger.error(f"Error fetching users from Cognito: {str(e)}")
-        return {'statusCode': 500, 'body': json.dumps({'error': str(e)})}
+        return {
+            'statusCode': 500, 
+            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'error': str(e)})
+        }
 
 def handle_post_users(body):
     try:
@@ -440,34 +501,59 @@ def handle_post_users(body):
         }
     except Exception as e:
         logger.error(f"Error creating user in DB: {str(e)}")
-        return {'statusCode': 500, 'body': json.dumps({'error': str(e)})}
+        return {'statusCode': 500, 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': str(e)})}
 
 def handle_delete_users(user_id):
     try:
-        table_name = os.environ.get('USERS_TABLE', 'playwright-users')
-        table = dynamodb.Table(table_name)
-        table.delete_item(Key={'user_id': user_id})
+        user_pool_id = os.environ.get('COGNITO_USER_POOL_ID')
+        if user_pool_id and user_id:
+            cognito.admin_delete_user(
+                UserPoolId=user_pool_id,
+                Username=user_id
+            )
         return {
             'statusCode': 200,
             'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'message': 'Đã xóa user'}, ensure_ascii=False)
+            'body': json.dumps({'message': 'Đã xóa user thành công'}, ensure_ascii=False)
         }
     except Exception as e:
-        return {'statusCode': 500, 'body': json.dumps({'error': str(e)})}
+        return {'statusCode': 500, 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': str(e)})}
 
 def handle_post_schedules(body):
     try:
         name = body.get('name', f'schedule-{uuid.uuid4()}')
         cron = body.get('cron', '0 2 * * *')
         parts = cron.strip().split()
-        # EventBridge Scheduler dùng 6-field cron (thêm year)
-        expr = f"cron({parts[0]} {parts[1]} {parts[2]} {parts[3]} {parts[4]} *)" if len(parts) == 5 else f"cron({cron} *)"
+        
+        if len(parts) == 5:
+            # EventBridge Scheduler yêu cầu 6 field (thêm year).
+            # Đặc biệt, Day-of-month (field 3) và Day-of-week (field 5) không được cùng là '*'
+            # Một trong hai phải là '?'
+            dom = parts[2]
+            dow = parts[4]
+            if dom == '*' and dow == '*':
+                dow = '?'
+            elif dom != '*' and dow == '*':
+                dow = '?'
+            elif dow != '*' and dom == '*':
+                dom = '?'
+            expr = f"cron({parts[0]} {parts[1]} {dom} {parts[3]} {dow} *)"
+        else:
+            expr = f"cron({cron} *)"
+        queue_url = os.environ.get('TASK_QUEUE_URL', '')
+        queue_arn = queue_url
+        if queue_url.startswith('https://sqs.'):
+            parts = queue_url.replace('https://sqs.', '').split('/')
+            if len(parts) >= 3:
+                region = parts[0].split('.')[0]
+                queue_arn = f"arn:aws:sqs:{region}:{parts[1]}:{parts[2]}"
+                
         scheduler.create_schedule(
             Name=name,
             ScheduleExpression=expr,
             FlexibleTimeWindow={'Mode': 'OFF'},
             Target={
-                'Arn': os.environ.get('TASK_QUEUE_URL', ''),
+                'Arn': queue_arn,
                 'RoleArn': os.environ.get('SCHEDULER_ROLE_ARN', ''),
                 'Input': json.dumps({'website': body.get('website', ''), 'env': body.get('env', 'Production')})
             }
@@ -478,7 +564,11 @@ def handle_post_schedules(body):
             'body': json.dumps({'message': 'Tạo lịch thành công', 'name': name}, ensure_ascii=False)
         }
     except Exception as e:
-        return {'statusCode': 500, 'body': json.dumps({'error': str(e)})}
+        return {
+            'statusCode': 500,
+            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'error': str(e)}, ensure_ascii=False)
+        }
 
 def handle_delete_schedules(schedule_id):
     try:
@@ -489,7 +579,11 @@ def handle_delete_schedules(schedule_id):
             'body': json.dumps({'message': f'Đã xóa lịch {schedule_id}'}, ensure_ascii=False)
         }
     except Exception as e:
-        return {'statusCode': 500, 'body': json.dumps({'error': str(e)})}
+        return {
+            'statusCode': 500,
+            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'error': str(e)}, ensure_ascii=False)
+        }
 
 def handle_get_test_suite_detail(suite_id):
     """
@@ -529,7 +623,7 @@ def handle_get_test_suite_detail(suite_id):
         }
     except Exception as e:
         logger.error(f"Error fetching test suite detail: {str(e)}")
-        return {'statusCode': 500, 'body': json.dumps({'error': str(e)})}
+        return {'statusCode': 500, 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': str(e)})}
 
 
 def handle_delete_test_suites(suite_id):
@@ -557,7 +651,7 @@ def handle_delete_test_suites(suite_id):
             'body': json.dumps({'message': 'Đã xóa test suite'}, ensure_ascii=False)
         }
     except Exception as e:
-        return {'statusCode': 500, 'body': json.dumps({'error': str(e)})}
+        return {'statusCode': 500, 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': str(e)})}
 
 def handle_delete_emails(email_address):
     try:
@@ -570,7 +664,7 @@ def handle_delete_emails(email_address):
             'body': json.dumps({'message': 'Đã xóa email'}, ensure_ascii=False)
         }
     except Exception as e:
-        return {'statusCode': 500, 'body': json.dumps({'error': str(e)})}
+        return {'statusCode': 500, 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': str(e)})}
 
 def handle_get_report_detail(report_id):
     try:
@@ -601,7 +695,7 @@ def handle_get_report_detail(report_id):
             'body': json.dumps(report, ensure_ascii=False)
         }
     except Exception as e:
-        return {'statusCode': 500, 'body': json.dumps({'error': str(e)})}
+        return {'statusCode': 500, 'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'}, 'body': json.dumps({'error': str(e)})}
 
 def handle_get_audit_logs():
     return {
@@ -738,5 +832,5 @@ def lambda_handler(event, context):
             'body': json.dumps({
                 'message': 'Đã có lỗi xảy ra trên server',
                 'error': str(e)
-            })
+            }, ensure_ascii=False)
         }
