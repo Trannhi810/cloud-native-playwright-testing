@@ -47,8 +47,14 @@ function NotFound() {
 }
 
 export default function App() {
-  // Bắt đầu với user = null → bắt buộc đăng nhập
-  const [user, setUser] = useState(null)
+  // Lấy user từ localStorage nếu đã đăng nhập trước đó (để F5 không bị mất)
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem('user')
+    if (saved) {
+      try { return JSON.parse(saved) } catch (e) { return null }
+    }
+    return null
+  })
 
   return (
     <ThemeProvider>

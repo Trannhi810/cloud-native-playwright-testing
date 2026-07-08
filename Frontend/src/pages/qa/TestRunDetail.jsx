@@ -11,7 +11,7 @@ export default function TestRunDetail() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    fetch(`${API_ENDPOINTS.testRuns}/${id}`)
+    apiFetch(`${API_ENDPOINTS.testRuns}/${id}`)
       .then(res => {
         if (!res.ok) throw new Error('API fetch error')
         return res.json()
