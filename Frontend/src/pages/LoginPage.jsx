@@ -71,17 +71,17 @@ import { CognitoUserPool, AuthenticationDetails, CognitoUser } from 'amazon-cogn
 import { COGNITO_CONFIG } from '../config'
 
 export default function LoginPage() {
-  const [email,    setEmail]    = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [isNewPasswordReq, setIsNewPasswordReq] = useState(false)
   const [cognitoUserObj, setCognitoUserObj] = useState(null)
-  
+
   const [showPass, setShowPass] = useState(false)
-  const [error,    setError]    = useState('')
-  const [loading,  setLoading]  = useState(false)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const { setUser } = useAuth()
-  const navigate    = useNavigate()
+  const navigate = useNavigate()
 
   const handleLogin = (e) => {
     e.preventDefault()
@@ -119,16 +119,16 @@ export default function LoginPage() {
 
   const fetchUserAttributesAndLogin = (cognitoUser) => {
     cognitoUser.getUserAttributes((err, attributes) => {
-      let role = 'viewer'
+      let role = 'developer'
       let name = email.split('@')[0]
-      
+
       if (!err && attributes) {
         attributes.forEach(attr => {
           if (attr.Name === 'custom:role') role = attr.Value
           if (attr.Name === 'name') name = attr.Value
         })
       }
-      
+
       // Fallback roles based on email if no custom attributes are set in Cognito
       if (email.toLowerCase().includes('admin')) role = 'admin'
       else if (email.toLowerCase().includes('qa')) role = 'qa'

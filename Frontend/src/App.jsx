@@ -118,7 +118,7 @@ export default function App() {
             } />
 
             {/* ── TẤT CẢ ROLES ── */}
-            <Route path="viewer" element={
+            <Route path="developer" element={
               <ProtectedRoute allowedRoles={['admin', 'qa', 'developer']}>
                 <ViewerDashboard />
               </ProtectedRoute>

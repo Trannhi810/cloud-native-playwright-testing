@@ -20,7 +20,7 @@ const qaNav = [
   { to: '/test-runs', icon: History, label: 'Lịch sử' },
 ]
 const viewerNav = [
-  { to: '/viewer', icon: Eye, label: 'Developer' },
+  { to: '/developer', icon: Eye, label: 'Developer' },
 ]
 const aiNav = [
   { to: '/ai-insights', icon: Bot, label: 'AI Insights' },
@@ -38,7 +38,7 @@ const pageTitles = {
   '/email-config': 'Cấu hình Email',
   '/audit-log': 'Audit Log & Users', '/qa-dashboard': 'QA Dashboard',
   '/test-suites': 'Test Suites', '/trigger': 'Kích hoạt thủ công',
-  '/test-runs': 'Lịch sử kiểm thử', '/viewer': 'Developer Dashboard',
+  '/test-runs': 'Lịch sử kiểm thử', '/developer': 'Developer Dashboard',
 }
 
 export default function Layout() {
@@ -61,19 +61,27 @@ export default function Layout() {
         </div>
 
         <nav className="sidebar-nav">
-          <div className="nav-section">Admin</div>
-          {adminNav.map(({ to, icon: Icon, label }) => (
-            <NavLink key={to} to={to} className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
-              <Icon size={16} strokeWidth={1.8} />{label}
-            </NavLink>
-          ))}
+          {user?.role === 'admin' && (
+            <>
+              <div className="nav-section">Admin</div>
+              {adminNav.map(({ to, icon: Icon, label }) => (
+                <NavLink key={to} to={to} className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
+                  <Icon size={16} strokeWidth={1.8} />{label}
+                </NavLink>
+              ))}
+            </>
+          )}
 
-          <div className="nav-section">QA / Tester</div>
-          {qaNav.map(({ to, icon: Icon, label }) => (
-            <NavLink key={to} to={to} className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
-              <Icon size={16} strokeWidth={1.8} />{label}
-            </NavLink>
-          ))}
+          {['admin', 'qa'].includes(user?.role) && (
+            <>
+              <div className="nav-section">QA / Tester</div>
+              {qaNav.map(({ to, icon: Icon, label }) => (
+                <NavLink key={to} to={to} className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}>
+                  <Icon size={16} strokeWidth={1.8} />{label}
+                </NavLink>
+              ))}
+            </>
+          )}
 
           <div className="nav-section">Developer</div>
           {viewerNav.map(({ to, icon: Icon, label }) => (

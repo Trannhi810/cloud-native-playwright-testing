@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext'
 const roleHomePage = {
   admin: '/dashboard',
   qa: '/qa-dashboard',
-  developer: '/viewer',
+  developer: '/developer',
 }
 
 // Route chỉ cho người đã đăng nhập
