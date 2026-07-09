@@ -106,3 +106,51 @@ def handle_delete_schedules(schedule_id):
         return success({'message': f'Đã xóa lịch {schedule_id}'})
     except Exception as e:
         return error(500, str(e))
+
+def handle_put_schedules(schedule_id, body):
+    try:
+        raw_name = body.get('name', schedule_id)
+        
+        cron = body.get('cron', '0 2 * * *')
+        parts = cron.strip().split()
+        
+        if len(parts) == 5:
+            dom = parts[2]
+            dow = parts[4]
+            if dom == '*' and dow == '*':
+                dow = '?'
+            elif dom != '*' and dow == '*':
+                dow = '?'
+            elif dow != '*' and dom == '*':
+                dom = '?'
+            expr = f"cron({parts[0]} {parts[1]} {dom} {parts[3]} {dow} *)"
+        else:
+            expr = f"cron({cron} *)"
+            
+        queue_url = os.environ.get('TASK_QUEUE_URL', '')
+        queue_arn = queue_url
+        if queue_url.startswith('https://sqs.'):
+            parts_url = queue_url.replace('https://sqs.', '').split('/')
+            if len(parts_url) >= 3:
+                region = parts_url[0].split('.')[0]
+                queue_arn = f"arn:aws:sqs:{region}:{parts_url[1]}:{parts_url[2]}"
+                
+        scheduler.update_schedule(
+            Name=schedule_id,
+            ScheduleExpression=expr,
+            FlexibleTimeWindow={'Mode': 'OFF'},
+            Target={
+                'Arn': queue_arn,
+                'RoleArn': os.environ.get('SCHEDULER_ROLE_ARN', ''),
+                'Input': json.dumps({
+                    'website': body.get('website', ''), 
+                    'env': body.get('env', 'Production'),
+                    'testSuite': body.get('testSuite', ''),
+                    'test_script': body.get('testSuite', ''),
+                    'human_name': raw_name
+                })
+            }
+        )
+        return success({'message': 'Cập nhật lịch thành công', 'name': schedule_id})
+    except Exception as e:
+        return error(500, str(e))

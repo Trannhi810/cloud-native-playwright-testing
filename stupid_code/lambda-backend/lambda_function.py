@@ -6,7 +6,7 @@ from core.responses import error
 
 from routes.history import handle_get_history, handle_get_stats
 from routes.reports import handle_get_reports, handle_get_report_detail
-from routes.schedules import handle_get_schedules, handle_post_schedules, handle_delete_schedules
+from routes.schedules import handle_get_schedules, handle_post_schedules, handle_delete_schedules, handle_put_schedules
 from routes.test_runs import handle_get_test_runs
 from routes.users import handle_get_users, handle_post_users, handle_delete_users
 from routes.test_suites import handle_get_test_suites, handle_post_test_suites, handle_get_test_suite_detail, handle_delete_test_suites
@@ -19,8 +19,13 @@ def lambda_handler(event, context):
     """
     try:
         logger.info(f"Received event from API Gateway: {json.dumps(event)}")
-        raw_path = event.get('rawPath', '/trigger')
-        http_method = event.get('requestContext', {}).get('http', {}).get('method', 'POST')
+        raw_path = event.get('rawPath') or event.get('resource') or event.get('path') or '/trigger'
+        
+        http_method = 'POST'
+        if event.get('httpMethod'):
+            http_method = event.get('httpMethod')
+        elif event.get('requestContext', {}).get('http', {}).get('method'):
+            http_method = event.get('requestContext', {}).get('http', {}).get('method')
         
         body_str = event.get('body', '{}')
         body_data = json.loads(body_str) if isinstance(body_str, str) and body_str else (body_str or {})
@@ -36,6 +41,8 @@ def lambda_handler(event, context):
             if http_method == 'POST': return handle_post_schedules(body_data)
         elif raw_path.startswith('/schedules/') and http_method == 'DELETE':
             return handle_delete_schedules(raw_path.split('/schedules/')[-1])
+        elif raw_path.startswith('/schedules/') and http_method == 'PUT':
+            return handle_put_schedules(raw_path.split('/schedules/')[-1], body_data)
         elif raw_path == '/stats' and http_method == 'GET':
             return handle_get_stats()
         elif raw_path == '/test-runs' and http_method == 'GET':
@@ -64,7 +71,6 @@ def lambda_handler(event, context):
         elif raw_path.startswith('/email-config/') and http_method == 'DELETE':
             return handle_delete_emails(raw_path.split('/email-config/')[-1])
 
-        # Authentication check for trigger
         if 'requestContext' in event:
             groups = []
             jwt_claims = event['requestContext'].get('authorizer', {}).get('jwt', {}).get('claims', {})
