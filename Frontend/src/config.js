@@ -48,6 +48,6 @@ export async function apiFetch(url, options = {}) {
     'Content-Type': 'application/json',
     ...(options.headers || {}),
   }
-  if (token) headers['Authorization'] = token
+  if (token) headers['Authorization'] = `Bearer ${token}`
   return fetch(url, { ...options, headers })
 }
