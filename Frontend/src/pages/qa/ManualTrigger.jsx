@@ -40,6 +40,7 @@ export default function ManualTrigger() {
           website: form.website,
           env: form.env,
           suite: form.suite,
+          script_s3_key: suites.find(s => (s.name || s) === form.suite)?.script_s3_key || '',
           priority: form.priority,
         }),
       })

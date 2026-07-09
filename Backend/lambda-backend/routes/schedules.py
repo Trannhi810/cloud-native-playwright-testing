@@ -89,9 +89,12 @@ def handle_post_schedules(body):
                 'RoleArn': os.environ.get('SCHEDULER_ROLE_ARN', ''),
                 'Input': json.dumps({
                     'website': body.get('website', ''), 
+                    'target_url': body.get('website', ''),
                     'env': body.get('env', 'Production'),
-                    'testSuite': body.get('testSuite', ''),
-                    'test_script': body.get('testSuite', ''),
+                    'testSuite': body.get('suite_name', body.get('testSuite', '')),
+                    'test_script': body.get('suite_name', body.get('testSuite', '')),
+                    'script_s3_key': body.get('script_s3_key', ''),
+                    'triggered_by': 'schedule',
                     'human_name': raw_name
                 })
             }
@@ -144,9 +147,12 @@ def handle_put_schedules(schedule_id, body):
                 'RoleArn': os.environ.get('SCHEDULER_ROLE_ARN', ''),
                 'Input': json.dumps({
                     'website': body.get('website', ''), 
+                    'target_url': body.get('website', ''),
                     'env': body.get('env', 'Production'),
-                    'testSuite': body.get('testSuite', ''),
-                    'test_script': body.get('testSuite', ''),
+                    'testSuite': body.get('suite_name', body.get('testSuite', '')),
+                    'test_script': body.get('suite_name', body.get('testSuite', '')),
+                    'script_s3_key': body.get('script_s3_key', ''),
+                    'triggered_by': 'schedule',
                     'human_name': raw_name
                 })
             }

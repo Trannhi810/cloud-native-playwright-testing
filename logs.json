@@ -1,0 +1,11 @@
+﻿{
+    "events": [
+        {
+            "timestamp": 1783588972038,
+            "message": "[5c44be17-1856-4030-ac0e-046006ed4b02] Lß╗ùi chuß║⌐n bß╗ï test script: The specified key does not exist.",
+            "ingestionTime": 1783588976230
+        }
+    ],
+    "nextForwardToken": "f/39775363204328598359231492699517751308445988054292758528/s",
+    "nextBackwardToken": "b/39775363204328598359231492699517751308445988054292758528/s"
+}

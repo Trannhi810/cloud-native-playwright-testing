@@ -93,13 +93,13 @@ class TestPlaywrightLambdas(unittest.TestCase):
         mock_logs.reset_mock()
 
         # Nạp dữ liệu các event từ thư mục test-events
-        with open(os.path.join(BASE_DIR, 'test-events', 'event_api_gateway.json'), 'r', encoding='utf-8') as f:
-            self.event_api = json.load(f)
+        with open(os.path.join(BASE_DIR, 'test-events', 'test_event_backend.json'), 'r', encoding='utf-8') as f:
+            self.event_api_gateway = json.load(f)
             
-        with open(os.path.join(BASE_DIR, 'test-events', 'event_sqs.json'), 'r', encoding='utf-8') as f:
+        with open(os.path.join(BASE_DIR, 'test-events', 'test_event_coordinator.json'), 'r', encoding='utf-8') as f:
             self.event_sqs = json.load(f)
             
-        with open(os.path.join(BASE_DIR, 'test-events', 'event_dlq.json'), 'r', encoding='utf-8') as f:
+        with open(os.path.join(BASE_DIR, 'test-events', 'test_event_error_handler.json'), 'r', encoding='utf-8') as f:
             self.event_dlq = json.load(f)
 
         with open(os.path.join(BASE_DIR, 'test-events', 'event_postprocessing.json'), 'r', encoding='utf-8') as f:
@@ -107,9 +107,12 @@ class TestPlaywrightLambdas(unittest.TestCase):
 
     def test_lambda_backend_success(self):
         """Test Lambda Backend nhận event từ API Gateway và gửi vào SQS thành công"""
-        mock_sqs.send_message.return_value = {'MessageId': 'msg-123456'}
-
-        response = lambda_backend.lambda_handler(self.event_api, None)
+        # Giả lập response gửi SQS
+        mock_sqs.send_message.return_value = {
+            'MessageId': 'msg-123456'
+        }
+        
+        response = lambda_backend.lambda_handler(self.event_api_gateway, None)
 
         self.assertEqual(response['statusCode'], 200)
         body = json.loads(response['body'])
@@ -161,7 +164,7 @@ class TestPlaywrightLambdas(unittest.TestCase):
         self.assertEqual(err_log_kwargs['TableName'], os.environ['ERROR_DYNAMODB_TABLE'])
         self.assertEqual(
             err_log_kwargs['Item']['error_message']['S'], 
-            'Failed to run ECS task: ClusterNotFoundException - The specified cluster does not exist.'
+            'Unknown error (DLQ Triggered)'
         )
         
         # Kiểm tra cập nhật status='failed' trong history table
@@ -204,8 +207,8 @@ class TestPlaywrightLambdas(unittest.TestCase):
         self.assertEqual(body['task_id'], '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d')
 
         # Xác thực DynamoDB update_item được gọi đúng trạng thái 'success'
-        mock_dynamodb.update_item.assert_called_once()
-        db_kwargs = mock_dynamodb.update_item.call_args[1]
+        self.assertEqual(mock_dynamodb.update_item.call_count, 2)
+        db_kwargs = mock_dynamodb.update_item.call_args_list[-1][1]
         self.assertEqual(db_kwargs['ExpressionAttributeValues'][':status']['S'], 'success')
         self.assertEqual(db_kwargs['ExpressionAttributeValues'][':report']['S'], 'https://s3.presigned.url/report.html')
 

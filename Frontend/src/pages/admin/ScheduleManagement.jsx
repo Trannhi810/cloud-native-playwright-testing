@@ -53,9 +53,17 @@ export default function ScheduleManagement() {
     try {
       const url = editing ? `${API_ENDPOINTS.schedules}/${editing}` : API_ENDPOINTS.schedules
       const method = editing ? 'PUT' : 'POST'
+      
+      const selectedTs = testSuites.find(t => t.id === form.testSuite)
+      const payload = {
+        ...form,
+        suite_name: selectedTs?.name || '',
+        script_s3_key: selectedTs?.script_s3_key || ''
+      }
+      
       const res = await apiFetch(url, {
         method: method,
-        body: JSON.stringify(form)
+        body: JSON.stringify(payload)
       })
 
       const data = await res.json()
