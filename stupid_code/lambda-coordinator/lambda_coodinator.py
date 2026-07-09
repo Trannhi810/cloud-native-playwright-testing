@@ -40,8 +40,6 @@ def lambda_handler(event, context):
                 payload['task_id'] = task_id
                 logger.info(f"Generated dynamic task_id for EventBridge/SQS payload: {task_id}")
             
-            # Đảm bảo payload truyền vào ECS container có cả script_s3_key
-            # để container tự fetch nội dung script từ S3
             if 'script_s3_key' not in payload and payload.get('test_script', '').startswith('test-scripts/'):
                 payload['script_s3_key'] = payload['test_script']
 
@@ -81,13 +79,9 @@ def lambda_handler(event, context):
                 raise Exception(f"Failed to run ECS task: {response['failures']}")
                 
             logger.info(f"Writing running status to DynamoDB {history_table} for task {task_id}")
-
-            # script_s3_key: S3 path (để container fetch nội dung thực)
-            # test_script  : tên hiển thị ngắn (tên file hoặc tên suite)
             script_s3_key = payload.get('script_s3_key', '')
             test_script_display = payload.get('test_script', '')
             if test_script_display.startswith('test-scripts/'):
-                # Nếu vẫn là S3 key (legacy), tách ra tên file để display
                 test_script_display = test_script_display.split('/')[-1]
                 if not script_s3_key:
                     script_s3_key = payload.get('test_script', '')
@@ -95,14 +89,14 @@ def lambda_handler(event, context):
             history_item = {
                 'task_id':        {'S': task_id},
                 'target_url':     {'S': payload.get('target_url', '')},
-                'test_script':    {'S': test_script_display},   # Tên hiển thị
-                'script_s3_key':  {'S': script_s3_key},         # S3 key để container fetch
+                'test_script':    {'S': test_script_display},
+                'script_s3_key':  {'S': script_s3_key},
                 'status':         {'S': 'running'},
+                'env':            {'S': payload.get('env', 'Production')},
                 'triggered_by':   {'S': payload.get('triggered_by', 'manual')},
                 'started_at':     {'S': datetime.datetime.utcnow().isoformat() + 'Z'}
             }
 
-            # Lưu thêm suite_name nếu có (dùng để hiển thị ở Dashboard)
             if payload.get('suite_name'):
                 history_item['suite_name'] = {'S': payload['suite_name']}
 
