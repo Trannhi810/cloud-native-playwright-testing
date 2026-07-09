@@ -86,11 +86,13 @@ export default function TestSuiteManagement() {
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
         console.error('Lỗi từ backend khi lưu suite:', err)
+        refetch()
       } else {
         refetch()
       }
     } catch (err) {
       console.error('Lỗi khi lưu suite:', err)
+      refetch()
     } finally {
       setUploading(false)
     }
@@ -98,11 +100,12 @@ export default function TestSuiteManagement() {
 
   const del = async (id) => {
     try {
-      await apiFetch(`${API_ENDPOINTS.testSuites}/${id}`, { method: 'DELETE' })
+      const res = await apiFetch(`${API_ENDPOINTS.testSuites}/${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('API delete failed')
       setSuites(s => s.filter(x => x.id !== id))
     } catch (err) {
       console.error('Lỗi khi xóa suite:', err)
-      setSuites(s => s.filter(x => x.id !== id))
+      refetch()
     }
   }
 

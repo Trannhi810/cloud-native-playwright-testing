@@ -55,8 +55,8 @@ export default function AdminDashboard() {
         // Backend cần trả về đúng cấu trúc này để tự động map vào giao diện
         // Ví dụ: { stats: [...], trendData: [...], pieData: [...], recentRuns: [...] }
         setData({
-          stats: initialStats.map((base, i) => {
-            const be = (apiData.stats || [])[i]
+          stats: initialStats.map(base => {
+            const be = (apiData.stats || []).find(s => s.id === base.id)
             return be ? { ...base, ...be } : base
           }),
           trendData: apiData.trendData || initialTrend,
@@ -71,7 +71,7 @@ export default function AdminDashboard() {
       })
   }, [])
 
-  const totalPie = data.pieData.reduce((s, e) => s + e.value, 0)
+  const totalPie = Array.isArray(data.pieData) ? data.pieData.reduce((s, e) => s + (e.value || 0), 0) : 0
 
   return (
     <div className="page">

@@ -57,12 +57,12 @@ const BgPattern = () => (
       { x: '62%', y: '70%', s: 20 },
       { x: '45%', y: '82%', s: 16 },
     ].map(({ x, y, s }, i) => (
-      <polygon key={i}
-        points={`0,${s * 0.5} ${s * 0.25},0 ${s * 0.75},0 ${s},${s * 0.5} ${s * 0.75},${s} ${s * 0.25},${s}`}
-        fill="none" stroke="rgba(165,180,252,0.25)" strokeWidth="1.2"
-        transform={`translate(${x === '55%' ? 550 : x === '78%' ? 780 : x === '88%' ? 880 : x === '62%' ? 620 : 450},
-                    ${y === '18%' ? 100 : y === '12%' ? 65 : y === '42%' ? 250 : y === '70%' ? 430 : 500})`}
-      />
+      <svg key={i} x={x} y={y} overflow="visible">
+        <polygon 
+          points={`0,${s * 0.5} ${s * 0.25},0 ${s * 0.75},0 ${s},${s * 0.5} ${s * 0.75},${s} ${s * 0.25},${s}`}
+          fill="none" stroke="rgba(165,180,252,0.25)" strokeWidth="1.2"
+        />
+      </svg>
     ))}
   </svg>
 )
@@ -137,7 +137,10 @@ export default function LoginPage() {
       localStorage.setItem('user', JSON.stringify(userData))
       setUser(userData)
       setLoading(false)
-      navigate('/dashboard')
+      
+      if (role === 'admin') navigate('/dashboard')
+      else if (role === 'qa') navigate('/qa-dashboard')
+      else navigate('/developer')
     })
   }
 

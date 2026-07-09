@@ -227,15 +227,15 @@ export default function ManualTrigger() {
             <div className="progress-bar" style={{ maxWidth: 400, margin: '0 auto 16px', height: 8 }}>
               <div className="progress-fill" style={{ width: `${progress}%`, background: 'var(--grad-blue)' }} />
             </div>
-            <div style={{ fontSize: 14, color: 'var(--text-muted)', fontWeight: 600 }}>{progress}% — {progress < 40 ? 'Khởi tạo container...' : progress < 80 ? 'Đang chạy test cases...' : 'Đang xuất báo cáo...'}</div>
+            <div style={{ fontSize: 14, color: 'var(--text-muted)', fontWeight: 600 }}>{progress}% — {progress < 40 ? 'Xác thực thông tin...' : progress < 80 ? 'Đóng gói Payload...' : 'Đẩy vào SQS...'}</div>
           </div>
         )}
 
         {status === 'success' && (
           <div className="card" style={{ textAlign: 'center', padding: 60, maxWidth: 680, margin: '0 auto' }}>
             <CheckCircle size={64} style={{ color: 'var(--green)', margin: '0 auto 24px' }} />
-            <div style={{ fontWeight: 800, fontSize: 24, marginBottom: 12, color: 'var(--text-primary)' }}>Kiểm thử hoàn tất!</div>
-            <div style={{ color: 'var(--text-secondary)', marginBottom: 32, fontSize: 15 }}>Báo cáo HTML đã được upload lên S3 • Email thông báo đã gửi qua SES</div>
+            <div style={{ fontWeight: 800, fontSize: 24, marginBottom: 12, color: 'var(--text-primary)' }}>Đã gửi yêu cầu vào hàng đợi!</div>
+            <div style={{ color: 'var(--text-secondary)', marginBottom: 32, fontSize: 15 }}>Phiên kiểm thử đang được chạy ngầm trên ECS • Xem kết quả tại mục Lịch sử</div>
             <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
               <button className="btn btn-primary" onClick={() => navigate(`/test-runs/${runId}`)} style={{ padding: '12px 24px' }}>Xem báo cáo chi tiết</button>
               <button className="btn btn-secondary" onClick={() => { setStatus(null); setForm({ website: '', env: 'Staging', suite: '', priority: 'normal' }) }} style={{ padding: '12px 24px' }}>Chạy test mới</button>

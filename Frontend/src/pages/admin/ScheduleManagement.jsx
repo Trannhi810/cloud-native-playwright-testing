@@ -79,11 +79,12 @@ export default function ScheduleManagement() {
 
   const del = async (id) => {
     try {
-      await apiFetch(`${API_ENDPOINTS.schedules}/${id}`, { method: 'DELETE' })
+      const res = await apiFetch(`${API_ENDPOINTS.schedules}/${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('API delete failed')
       setSchedules(s => s.filter(x => x.id !== id))
     } catch (err) {
       console.error('Lỗi khi xóa lịch:', err)
-      setSchedules(s => s.filter(x => x.id !== id))
+      refetch()
     }
   }
 

@@ -29,30 +29,42 @@ export default function EmailConfig() {
     setNewEmail('')
 
     try {
-      await apiFetch(API_ENDPOINTS.emailConfig, {
+      const res = await apiFetch(API_ENDPOINTS.emailConfig, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email_address: emailToSave, active: true })
       })
-    } catch (e) { console.error(e) }
+      if (!res.ok) throw new Error('Add failed')
+    } catch (e) { 
+      console.error(e)
+      refetch() 
+    }
   }
 
   const delEmail = async (email) => {
     setEmails(prev => prev.filter(e => e.email_address !== email))
     try {
-      await apiFetch(`${API_ENDPOINTS.emailConfig}/${email}`, { method: 'DELETE' })
-    } catch (e) { console.error(e) }
+      const res = await apiFetch(`${API_ENDPOINTS.emailConfig}/${email}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Delete failed')
+    } catch (e) { 
+      console.error(e)
+      refetch() 
+    }
   }
 
   const toggleActive = async (email, currentActive) => {
     setEmails(prev => prev.map(e => e.email_address === email ? { ...e, active: !currentActive } : e))
     try {
-      await apiFetch(API_ENDPOINTS.emailConfig, {
+      const res = await apiFetch(API_ENDPOINTS.emailConfig, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email_address: email, active: !currentActive })
       })
-    } catch (e) { console.error(e) }
+      if (!res.ok) throw new Error('Toggle failed')
+    } catch (e) { 
+      console.error(e)
+      refetch() 
+    }
   }
 
   return (

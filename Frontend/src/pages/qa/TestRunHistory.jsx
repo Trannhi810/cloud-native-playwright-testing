@@ -29,9 +29,10 @@ export default function TestRunHistory() {
       })
   }, [])
 
+  const lowerSearch = search.toLowerCase()
   const filtered = runs.filter(r =>
     (filterStatus === 'ALL' || r.status === filterStatus) &&
-    ((r.website || '').includes(search) || (r.id || '').includes(search) || (r.suite || '').includes(search))
+    ((r.website || '').toLowerCase().includes(lowerSearch) || (r.id || '').toLowerCase().includes(lowerSearch) || (r.suite || '').toLowerCase().includes(lowerSearch))
   )
 
   // Dùng full_id (UUID đầy đủ) để navigate, tránh lỗi DynamoDB get_item không tìm thấy item
