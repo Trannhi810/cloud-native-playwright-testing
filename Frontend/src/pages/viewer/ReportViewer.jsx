@@ -56,7 +56,7 @@ export default function ReportViewer() {
       <div className="grid-2" style={{ marginBottom: 24 }}>
         <div className="card">
           <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <FileText size={16} style={{ color: 'var(--accent-blue)' }} /> Tóm tắt kết quả
+            <FileText size={16} style={{ color: 'var(--blue)' }} /> Tóm tắt kết quả
           </div>
           {summary.length > 0 ? summary.map(([k, v]) => (
             <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: '1px solid var(--border)' }}>

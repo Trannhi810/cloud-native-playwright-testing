@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Download, ExternalLink, CheckCircle, XCircle, Clock, Camera } from 'lucide-react'
+import { ArrowLeft, ExternalLink, CheckCircle, XCircle, Clock, Camera } from 'lucide-react'
 import { API_ENDPOINTS, apiFetch } from '../../config'
 
 export default function TestRunDetail() {
@@ -39,14 +39,13 @@ export default function TestRunDetail() {
         <button className="btn btn-secondary btn-sm btn-icon" onClick={() => navigate('/test-runs')}><ArrowLeft size={16} /></button>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <code style={{ color: 'var(--accent-blue)', fontSize: 14, fontWeight: 700 }}>{runDetail.id}</code>
+            <code style={{ color: 'var(--blue)', fontSize: 14, fontWeight: 700 }}>{runDetail.id}</code>
             <span className="badge badge-red">✗ Fail</span>
             <span className={`badge badge-${runDetail.env === 'Production' ? 'red' : 'yellow'}`}>{runDetail.env}</span>
           </div>
           <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 2 }}>{runDetail.website} • {runDetail.suite}</div>
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-          <button className="btn btn-secondary btn-sm"><Download size={14} /> JSON</button>
           <button className="btn btn-primary btn-sm"><ExternalLink size={14} /> Xem báo cáo HTML</button>
         </div>
       </div>

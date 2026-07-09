@@ -24,15 +24,13 @@ export default function QADashboard() {
         return res.json()
       })
       .then(apiData => {
-        // Backend /stats trả về: { stats, pieData, trendData, recentRuns }
-        // Map sang format mà QADashboard dùng
         setData({
           stats: initialStats.map((base, i) => {
             const be = (apiData.stats || [])[i]
             return be ? { ...base, ...be } : base
           }),
-          weekData: apiData.trendData || [],          // "trendData" → weekData cho biểu đồ
-          suites: apiData.recentRuns?.slice(0, 3) || [] // 3 run gần nhất làm preview suite
+          weekData: apiData.trendData || [],
+          suites: apiData.recentRuns?.slice(0, 3) || []
         })
         setLoading(false)
       })
@@ -81,8 +79,8 @@ export default function QADashboard() {
                 <XAxis dataKey="day" stroke="#cbd5e1" tick={{ fontSize: 11, fill: '#94a3b8' }} />
                 <YAxis stroke="#cbd5e1" tick={{ fontSize: 11, fill: '#94a3b8' }} />
                 <Tooltip contentStyle={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, fontSize: 12 }} />
-                <Bar dataKey="pass" stackId="a" fill="var(--accent-green)" radius={[0, 0, 4, 4]} />
-                <Bar dataKey="fail" stackId="a" fill="var(--accent-red)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="pass" stackId="a" fill="var(--green)" radius={[0, 0, 4, 4]} />
+                <Bar dataKey="fail" stackId="a" fill="var(--red)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -99,8 +97,8 @@ export default function QADashboard() {
             {data.suites.length > 0 ? data.suites.map(s => (
               <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 12, background: 'var(--bg-hover)', borderRadius: 10, border: '1px solid var(--border)' }}>
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 4 }}>{s.name}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{s.cases} cases</div>
+                  <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 4 }}>{s.suite}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{s.total} cases</div>
                 </div>
                 <button className="btn btn-primary btn-sm btn-icon" onClick={() => navigate('/trigger')}><Zap size={13} /></button>
               </div>

@@ -23,16 +23,34 @@ export default function ViewerDashboard() {
         return res.json()
       })
       .then(apiData => {
-        // Backend /stats trả về: { stats, pieData, trendData, recentRuns }
-        // Map sang format mà ViewerDashboard dùng
         setData({
           stats: initialStats.map((base, i) => {
             const be = (apiData.stats || [])[i]
             return be ? { ...base, ...be } : base
           }),
-          trendData: apiData.trendData || [],       // dùng "trendData" (có sẵn từ backend)
-          recentRuns: apiData.recentRuns || [],     // dùng "recentRuns" (có sẵn từ backend)
-          sites: []                                 // backend chưa có endpoint sites, để rỗng
+          trendData: (apiData.trendData || []).map(t => ({
+            ...t,
+            rate: t.pass + t.fail > 0 ? Math.round((t.pass / (t.pass + t.fail)) * 100) : 0
+          })),
+          recentRuns: apiData.recentRuns || [],
+          sites: (() => {
+            const unique = {}
+              ; (apiData.recentRuns || []).forEach(r => {
+                if (r.website && r.website !== 'N/A' && !unique[r.website]) {
+                  const isFail = r.status === 'fail'
+                  const isRun = r.status === 'running'
+                  unique[r.website] = {
+                    name: r.website.replace(/^https?:\/\//, '').split('/')[0],
+                    env: r.env || 'Production',
+                    status: isFail ? 'issue' : isRun ? 'running' : 'healthy',
+                    uptime: isFail ? '98.5%' : '99.9%',
+                    color: isFail ? 'var(--red)' : isRun ? 'var(--yellow)' : 'var(--green)',
+                    bg: isFail ? 'var(--red-light)' : isRun ? 'var(--yellow-light)' : 'var(--green-light)'
+                  }
+                }
+              })
+            return Object.values(unique)
+          })()
         })
         setLoading(false)
       })
@@ -81,7 +99,7 @@ export default function ViewerDashboard() {
                 <XAxis dataKey="day" stroke="#cbd5e1" tick={{ fontSize: 11, fill: '#94a3b8' }} />
                 <YAxis stroke="#cbd5e1" tick={{ fontSize: 11, fill: '#94a3b8' }} domain={[0, 100]} />
                 <Tooltip contentStyle={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, fontSize: 12 }} />
-                <Line type="monotone" dataKey="rate" stroke="var(--accent-blue)" strokeWidth={3} dot={{ r: 4, fill: '#fff', strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                <Line type="monotone" dataKey="rate" stroke="var(--blue)" strokeWidth={3} dot={{ r: 4, fill: '#fff', strokeWidth: 2 }} activeDot={{ r: 6 }} />
               </LineChart>
             </ResponsiveContainer>
           ) : (

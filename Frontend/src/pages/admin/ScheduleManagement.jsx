@@ -111,7 +111,7 @@ export default function ScheduleManagement() {
         <div className="table-container">
           <table>
             <thead>
-              <tr><th>Tên lịch</th><th>Website</th><th>Môi trường</th><th>Kịch bản</th><th>Lịch chạy</th><th>Trạng thái</th><th>Lần cuối</th><th>Lần kế tiếp</th><th>Thao tác</th></tr>
+              <tr><th>Tên lịch</th><th>Website</th><th>Môi trường</th><th>Kịch bản</th><th>Lịch chạy</th><th>Trạng thái</th><th>Lần cuối</th><th>Lần kế tiếp</th><th style={{ textAlign: 'right' }}>Thao tác</th></tr>
             </thead>
             <tbody>
               {loading ? (
@@ -124,7 +124,7 @@ export default function ScheduleManagement() {
                 schedules.map(sc => (
                   <tr key={sc.id}>
                     <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{sc.name}</td>
-                    <td style={{ color: 'var(--accent-cyan)', fontSize: 13 }}>{sc.website}</td>
+                    <td style={{ color: 'var(--cyan)', fontSize: 13 }}>{sc.website}</td>
                     <td><span className={`badge badge-${sc.env === 'Production' ? 'red' : sc.env === 'Staging' ? 'yellow' : 'blue'}`}>{sc.env}</span></td>
                     <td style={{ fontSize: 13, color: 'var(--text-primary)' }}>{testSuites.find(t => t.id === sc.testSuite)?.name || sc.testSuite || '—'}</td>
                     <td style={{ whiteSpace: 'nowrap' }}>
@@ -138,8 +138,8 @@ export default function ScheduleManagement() {
                     </td>
                     <td style={{ color: 'var(--text-muted)', fontSize: 13 }}>{sc.lastRun}</td>
                     <td style={{ fontSize: 13 }}>{sc.nextRun}</td>
-                    <td>
-                      <div style={{ display: 'flex', gap: 6 }}>
+                    <td style={{ textAlign: 'right' }}>
+                      <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                         <button className="btn btn-secondary btn-sm btn-icon" title={sc.status === 'active' ? 'Tạm dừng' : 'Kích hoạt'} onClick={() => toggleStatus(sc.id)}>
                           {sc.status === 'active' ? <Pause size={13} /> : <Play size={13} />}
                         </button>

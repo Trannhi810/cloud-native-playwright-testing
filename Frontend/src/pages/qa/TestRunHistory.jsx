@@ -74,7 +74,7 @@ export default function TestRunHistory() {
               ) : (
                 filtered.map(run => (
                   <tr key={run.id} style={{ cursor: 'pointer' }} onClick={() => goToDetail(run)}>
-                    <td><code style={{ color: 'var(--accent-blue)', fontSize: 12 }}>{run.id}</code></td>
+                    <td><code style={{ color: 'var(--blue)', fontSize: 12 }}>{run.id}</code></td>
                     <td>
                       <div style={{ fontWeight: 500, color: 'var(--text-primary)', fontSize: 13 }}>{run.website}</div>
                       <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{run.suite}</div>

@@ -91,7 +91,7 @@ export default function AIInsights() {
 
       <div className="card" style={{ marginTop: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
-          <AlertTriangle size={18} style={{ color: 'var(--accent-yellow)' }} />
+          <AlertTriangle size={18} style={{ color: 'var(--yellow)' }} />
           <div style={{ fontWeight: 700, fontSize: 15 }}>Lỗi lặp lại — Cần chú ý</div>
         </div>
         

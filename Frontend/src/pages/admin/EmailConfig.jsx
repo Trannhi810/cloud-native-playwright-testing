@@ -92,7 +92,7 @@ export default function EmailConfig() {
         <div className="table-container">
           <table>
             <thead>
-              <tr><th>Email</th><th>Trạng thái nhận tin</th><th>Thao tác</th></tr>
+              <tr><th>Email</th><th>Trạng thái nhận tin</th><th style={{ textAlign: 'right' }}>Thao tác</th></tr>
             </thead>
             <tbody>
               {loading ? (
@@ -105,8 +105,8 @@ export default function EmailConfig() {
                   <td>
                     <span className={`badge badge-${e.active ? 'green' : 'gray'}`}>{e.active ? 'Đang nhận' : 'Tạm dừng'}</span>
                   </td>
-                  <td>
-                    <div style={{ display: 'flex', gap: 6 }}>
+                  <td style={{ textAlign: 'right' }}>
+                    <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                       <button className="btn btn-secondary btn-sm" onClick={() => toggleActive(e.email_address, e.active)}>
                         {e.active ? 'Tạm dừng' : 'Kích hoạt'}
                       </button>

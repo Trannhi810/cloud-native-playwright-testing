@@ -133,7 +133,7 @@ export default function TestSuiteManagement() {
 
       <div
         className="card"
-        style={{ borderStyle: 'dashed', borderColor: dragOver ? 'var(--accent-blue)' : 'var(--border)', background: dragOver ? 'rgba(59,130,246,0.05)' : 'transparent', cursor: 'pointer', textAlign: 'center', marginBottom: 24, transition: 'all 0.2s' }}
+        style={{ borderStyle: 'dashed', borderColor: dragOver ? 'var(--blue)' : 'var(--border)', background: dragOver ? 'rgba(59,130,246,0.05)' : 'transparent', cursor: 'pointer', textAlign: 'center', marginBottom: 24, transition: 'all 0.2s' }}
         onDragOver={e => { e.preventDefault(); setDragOver(true) }}
         onDragLeave={() => setDragOver(false)}
         onDrop={e => {
@@ -144,7 +144,7 @@ export default function TestSuiteManagement() {
         }}
         onClick={openModal}
       >
-        <Upload size={32} style={{ margin: '0 auto 12px', color: dragOver ? 'var(--accent-blue)' : 'var(--text-muted)' }} />
+        <Upload size={32} style={{ margin: '0 auto 12px', color: dragOver ? 'var(--blue)' : 'var(--text-muted)' }} />
         <div style={{ fontWeight: 600, marginBottom: 4 }}>Kéo thả file .spec.js / .spec.ts vào đây</div>
         <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>hoặc click để chọn file • Hỗ trợ: .js, .ts, .zip</div>
       </div>
@@ -166,11 +166,11 @@ export default function TestSuiteManagement() {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
                 <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(139,92,246,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <TestTube size={18} style={{ color: 'var(--accent-purple)' }} />
+                  <TestTube size={18} style={{ color: 'var(--purple)' }} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{suite.name}</div>
-                  <div style={{ fontSize: 12, color: 'var(--accent-cyan)' }}>{suite.website}</div>
+                  <div style={{ fontSize: 12, color: 'var(--cyan)' }}>{suite.website}</div>
                 </div>
               </div>
               <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16, lineHeight: 1.5 }}>{suite.description}</p>
@@ -213,7 +213,7 @@ export default function TestSuiteManagement() {
                 <label className="form-label">Upload file kịch bản</label>
                 <input type="file" className="form-input" accept=".js,.ts,.zip" onChange={handleFileChange} />
                 {scriptFile && (
-                  <div style={{ marginTop: 6, fontSize: 12, color: 'var(--accent-green)' }}>
+                  <div style={{ marginTop: 6, fontSize: 12, color: 'var(--green)' }}>
                     ✅ Đã chọn: {scriptFile.name} ({(scriptFile.size / 1024).toFixed(1)} KB)
                   </div>
                 )}
