@@ -21,7 +21,8 @@ def format_run_history_item(item):
             pass
 
     # Format "2026-07-08 14:30:00" từ ISO timestamp
-    time_fe = started_at[:10] + " " + started_at[11:19] if started_at else ""
+    started_at_str = str(started_at) if started_at else ""
+    time_fe = started_at_str[:10] + " " + started_at_str[11:19] if len(started_at_str) >= 19 else ""
 
     # suite: ưu tiên suite_name (tên dễ đọc), fallback test_script (S3 key / tên file)
     suite_display = item.get('suite_name') or item.get('test_script') or 'Default Suite'
@@ -29,9 +30,13 @@ def format_run_history_item(item):
     if suite_display.startswith('test-scripts/'):
         suite_display = suite_display.split('/')[-1]
 
-    total_cases = int(item.get('total_cases', 1))
-    pass_cases  = int(item.get('pass_cases',  1 if status_db == 'success' else 0))
-    fail_cases  = int(item.get('fail_cases',  1 if status_db == 'failed'  else 0))
+    def safe_int(val, default):
+        try: return int(float(val)) if val else default
+        except (ValueError, TypeError): return default
+
+    total_cases = safe_int(item.get('total_cases'), 1)
+    pass_cases  = safe_int(item.get('pass_cases'),  1 if status_db == 'success' else 0)
+    fail_cases  = safe_int(item.get('fail_cases'),  1 if status_db == 'failed'  else 0)
 
     return {
         'id': task_id[:8] if task_id else '',

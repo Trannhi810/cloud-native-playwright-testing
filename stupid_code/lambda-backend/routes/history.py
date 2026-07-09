@@ -34,7 +34,7 @@ def handle_get_stats():
         failed = sum(1 for i in items if i.get('status') == 'failed')
         running = sum(1 for i in items if i.get('status') == 'running')
         
-        items.sort(key=lambda x: x.get('started_at', ''), reverse=True)
+        items.sort(key=lambda x: str(x.get('started_at') or ''), reverse=True)
         recent = items[:10]
         
         stats = [
