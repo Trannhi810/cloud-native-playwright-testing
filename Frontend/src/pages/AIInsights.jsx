@@ -99,8 +99,10 @@ export default function AIInsights() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {repeatingErrorPatterns.map((err, i) => (
               <div key={i} style={{ padding: 16, background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8 }}>
-                <div style={{ fontWeight: 600, color: '#ef4444', marginBottom: 4 }}>{err.title}</div>
-                <div style={{ fontSize: 14, color: 'var(--text-secondary)' }}>{err.description}</div>
+                <div style={{ fontWeight: 600, color: '#ef4444', marginBottom: 4 }}>{err.pattern}</div>
+                <div style={{ fontSize: 14, color: 'var(--text-secondary)' }}>
+                  Lặp lại: <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{err.count} lần</span> — Lần cuối: {err.lastSeen}
+                </div>
               </div>
             ))}
           </div>

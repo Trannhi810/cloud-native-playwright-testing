@@ -28,32 +28,30 @@ export default function ManualTrigger() {
     setStatus('running'); setProgress(0); setErrorMsg('')
 
     try {
-      // Lấy token đăng nhập của người dùng từ localStorage
       const token = localStorage.getItem('token')
 
-      // Gọi API Gateway thật
-      const res = await fetch(API_ENDPOINTS.trigger, {
+      const res = await apiFetch(API_ENDPOINTS.trigger, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': token
         },
         body: JSON.stringify({
-          website:   form.website,
-          env:       form.env,
-          suite:     form.suite,
-          priority:  form.priority,
+          website: form.website,
+          env: form.env,
+          suite: form.suite,
+          priority: form.priority,
         }),
       })
 
       if (!res.ok) throw new Error(`API trả về lỗi: ${res.status}`)
-      
+
       const data = await res.json()
       // Backend trả về "task_id" (UUID), không phải "runId"
       if (data && data.task_id) {
         setRunId(data.task_id)
       }
-      
+
       // Giả lập progress trong khi SQS/ECS xử lý
       for (let i = 0; i <= 100; i += 10) {
         await new Promise(r => setTimeout(r, 400))
@@ -145,13 +143,13 @@ export default function ManualTrigger() {
 
             {/* CỘT PHẢI: Infra & Ticket */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-              
+
               {/* Khối 1: AWS Infra Status */}
               <div className="card" style={{ background: 'var(--bg-hover)', border: '1px solid var(--border)' }}>
                 <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Activity size={16} style={{ color: 'var(--blue)' }} /> Trạng thái Hạ tầng AWS
                 </div>
-                
+
                 {/* Flow Diagram */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                   <div style={{ textAlign: 'center' }}>
@@ -184,7 +182,7 @@ export default function ManualTrigger() {
               {/* Khối 2: Execution Ticket */}
               <div className="card" style={{ background: 'var(--bg-card)', border: '2px dashed var(--border)', position: 'relative' }}>
                 <div style={{ position: 'absolute', top: -11, left: 24, background: 'var(--bg-card)', padding: '0 10px', fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1 }}>Execution Ticket</div>
-                
+
                 <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 14 }}>
                   {[
                     ['Website Target', form.website || 'Chưa nhập URL...'],
@@ -203,15 +201,15 @@ export default function ManualTrigger() {
 
                 {/* AI Hint */}
                 <div style={{ marginTop: 20, background: 'rgba(168,85,247,0.08)', padding: 14, borderRadius: 8, border: '1px solid rgba(168,85,247,0.2)', display: 'flex', gap: 10 }}>
-                   <Sparkles size={18} style={{ color: '#a855f7', flexShrink: 0, marginTop: 2 }} />
-                   <div>
-                     <div style={{ fontSize: 12, fontWeight: 700, color: '#a855f7', marginBottom: 4 }}>Mẹo từ AI Bedrock</div>
-                     <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                       {form.env === 'Production' 
-                         ? 'Kiểm thử trên Production yêu cầu bộ test suite có độ ưu tiên cao để tránh nghẽn hàng đợi SQS. Hãy chắc chắn lịch trình không trùng giờ cao điểm.'
-                         : 'Đảm bảo rằng webhook hoặc tài khoản test trong kịch bản .spec.js đã được cập nhật chính xác trong AWS Secrets Manager.'}
-                     </div>
-                   </div>
+                  <Sparkles size={18} style={{ color: '#a855f7', flexShrink: 0, marginTop: 2 }} />
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#a855f7', marginBottom: 4 }}>Mẹo từ AI Bedrock</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                      {form.env === 'Production'
+                        ? 'Kiểm thử trên Production yêu cầu bộ test suite có độ ưu tiên cao để tránh nghẽn hàng đợi SQS. Hãy chắc chắn lịch trình không trùng giờ cao điểm.'
+                        : 'Đảm bảo rằng webhook hoặc tài khoản test trong kịch bản .spec.js đã được cập nhật chính xác trong AWS Secrets Manager.'}
+                    </div>
+                  </div>
                 </div>
               </div>
 
