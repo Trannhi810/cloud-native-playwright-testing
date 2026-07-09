@@ -104,7 +104,7 @@ export default function Layout() {
         </nav>
 
         <div className="sidebar-footer">
-          <div className="user-card" onClick={() => { localStorage.removeItem('user'); localStorage.removeItem('token'); setUser(null); navigate('/login') }}>
+          <div className="user-card" onClick={() => { sessionStorage.removeItem('user'); sessionStorage.removeItem('token'); setUser(null); navigate('/login') }}>
             <div className="avatar" style={{ background: role.bg, color: role.color }}>
               {user?.name?.[0] || 'U'}
             </div>

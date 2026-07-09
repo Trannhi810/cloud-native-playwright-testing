@@ -1,13 +1,8 @@
-// ===== CẤU HÌNH API =====
-// Tự động chọn URL dựa theo môi trường:
-//   - Local dev (npm run dev)  → localhost:3001 (local_server.py)
-//   - Production (npm run build) → AWS API Gateway
-
-const IS_DEV = import.meta.env.DEV // Vite tự set = true khi chạy dev server
+const IS_DEV = import.meta.env.DEV
 
 export const API_BASE_URL = IS_DEV
-  ? 'http://localhost:3001'          // Backend local chạy trên port 3001
-  : 'https://8bsb7jbhu7.execute-api.ap-southeast-1.amazonaws.com' // AWS Production
+  ? 'http://localhost:3001'
+  : 'https://8bsb7jbhu7.execute-api.ap-southeast-1.amazonaws.com'
 
 export const COGNITO_CONFIG = {
   region: 'ap-southeast-1',
@@ -15,39 +10,33 @@ export const COGNITO_CONFIG = {
   clientId: '492jkd32vd241c2tuv1v160g4o',
 }
 
-// Các endpoint API
 export const API_ENDPOINTS = {
-  // 1. Nhóm Quản lý Chạy Test & Lịch sử
-  trigger:    `${API_BASE_URL}/trigger`,
-  testRuns:   `${API_BASE_URL}/test-runs`, // Cả GET danh sách và GET /{id}
-  stats:      `${API_BASE_URL}/stats`,
-
-  // 2. Nhóm Quản lý Kịch bản Test
+  trigger: `${API_BASE_URL}/trigger`,
+  testRuns: `${API_BASE_URL}/test-runs`,
+  stats: `${API_BASE_URL}/stats`,
   testSuites: `${API_BASE_URL}/test-suites`,
-
-  // 3. Nhóm Quản lý Hẹn giờ Tự động
-  schedules:  `${API_BASE_URL}/schedules`,
-
-  // 4. Nhóm Cấu hình Thông báo
-  emailConfig:`${API_BASE_URL}/email-config`,
-
-  // 5. Nhóm Quản trị Hệ thống
-  users:      `${API_BASE_URL}/users`,
-  auditLogs:  `${API_BASE_URL}/audit-logs`,
-
-  // 6. Nhóm Báo cáo & AI
-  reports:         `${API_BASE_URL}/reports`,
+  schedules: `${API_BASE_URL}/schedules`,
+  emailConfig: `${API_BASE_URL}/email-config`,
+  users: `${API_BASE_URL}/users`,
+  auditLogs: `${API_BASE_URL}/audit-logs`,
+  reports: `${API_BASE_URL}/reports`,
   chatgptInsights: `${API_BASE_URL}/chatgpt-insights`,
 }
 
-// ===== HELPER: Tự động gắn JWT token vào mọi request =====
-// Dùng apiFetch thay cho fetch() để không cần gửi token thủ công từng nơi
 export async function apiFetch(url, options = {}) {
-  const token = localStorage.getItem('token')
+  const token = sessionStorage.getItem('token')
   const headers = {
     'Content-Type': 'application/json',
     ...(options.headers || {}),
   }
   if (token) headers['Authorization'] = token
-  return fetch(url, { ...options, headers })
+
+  const res = await fetch(url, { ...options, headers })
+
+  if (res.status === 401) {
+    sessionStorage.removeItem('token')
+    window.location.href = '/login'
+  }
+
+  return res
 }

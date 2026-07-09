@@ -58,7 +58,7 @@ const BgPattern = () => (
       { x: '45%', y: '82%', s: 16 },
     ].map(({ x, y, s }, i) => (
       <svg key={i} x={x} y={y} overflow="visible">
-        <polygon 
+        <polygon
           points={`0,${s * 0.5} ${s * 0.25},0 ${s * 0.75},0 ${s},${s * 0.5} ${s * 0.75},${s} ${s * 0.25},${s}`}
           fill="none" stroke="rgba(165,180,252,0.25)" strokeWidth="1.2"
         />
@@ -90,7 +90,7 @@ export default function LoginPage() {
     if (isNewPasswordReq && cognitoUserObj) {
       cognitoUserObj.completeNewPasswordChallenge(newPassword, {}, {
         onSuccess: (result) => {
-          localStorage.setItem('token', result.getIdToken().getJwtToken())
+          sessionStorage.setItem('token', result.getIdToken().getJwtToken())
           fetchUserAttributesAndLogin(cognitoUserObj)
         },
         onFailure: (err) => { setError(err.message || 'Lỗi đổi mật khẩu'); setLoading(false) }
@@ -105,7 +105,7 @@ export default function LoginPage() {
 
     cognitoUser.authenticateUser(authenticationDetails, {
       onSuccess: (result) => {
-        localStorage.setItem('token', result.getIdToken().getJwtToken())
+        sessionStorage.setItem('token', result.getIdToken().getJwtToken())
         fetchUserAttributesAndLogin(cognitoUser)
       },
       onFailure: (err) => { setError(err.message || 'Email hoặc mật khẩu không đúng'); setLoading(false) },
@@ -129,15 +129,14 @@ export default function LoginPage() {
         })
       }
 
-      // Fallback roles based on email if no custom attributes are set in Cognito
       if (email.toLowerCase().includes('admin')) role = 'admin'
       else if (email.toLowerCase().includes('qa')) role = 'qa'
 
       const userData = { email, name, role }
-      localStorage.setItem('user', JSON.stringify(userData))
+      sessionStorage.setItem('user', JSON.stringify(userData))
       setUser(userData)
       setLoading(false)
-      
+
       if (role === 'admin') navigate('/dashboard')
       else if (role === 'qa') navigate('/qa-dashboard')
       else navigate('/developer')

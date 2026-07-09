@@ -28,7 +28,6 @@ export default function ScheduleManagement() {
         setLoading(false)
       })
 
-    // Fetch Test Suites for dropdown
     apiFetch(API_ENDPOINTS.testSuites)
       .then(res => res.ok ? res.json() : [])
       .then(data => setTestSuites(Array.isArray(data) ? data : data.items || []))
@@ -58,17 +57,16 @@ export default function ScheduleManagement() {
         method: method,
         body: JSON.stringify(form)
       })
-      
+
       const data = await res.json()
       if (!res.ok || data.error || data.message?.includes('Lỗi')) {
         throw new Error(data.error || data.message || 'Lỗi không xác định từ server')
       }
-      
-      // Thành công
+
       setShowModal(false)
       setEditing(null)
       setForm({ name: '', website: '', env: 'Production', cron: '0 2 * * *', testSuite: '' })
-      refetch() // Gọi lại API để load danh sách mới chuẩn nhất
+      refetch()
     } catch (err) {
       console.error('Lỗi khi lưu lịch:', err)
       setScheduleError('Không thể lưu lịch: ' + err.message)
@@ -78,6 +76,7 @@ export default function ScheduleManagement() {
   const toggleStatus = (id) => setSchedules(s => s.map(x => x.id === id ? { ...x, status: x.status === 'active' ? 'paused' : 'active' } : x))
 
   const del = async (id) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa lịch này không?')) return;
     try {
       const res = await apiFetch(`${API_ENDPOINTS.schedules}/${id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('API delete failed')

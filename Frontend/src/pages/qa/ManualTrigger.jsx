@@ -28,7 +28,7 @@ export default function ManualTrigger() {
     setStatus('running'); setProgress(0); setErrorMsg('')
 
     try {
-      const token = localStorage.getItem('token')
+      const token = sessionStorage.getItem('token')
 
       const res = await apiFetch(API_ENDPOINTS.trigger, {
         method: 'POST',
@@ -47,12 +47,10 @@ export default function ManualTrigger() {
       if (!res.ok) throw new Error(`API trả về lỗi: ${res.status}`)
 
       const data = await res.json()
-      // Backend trả về "task_id" (UUID), không phải "runId"
       if (data && data.task_id) {
         setRunId(data.task_id)
       }
 
-      // Giả lập progress trong khi SQS/ECS xử lý
       for (let i = 0; i <= 100; i += 10) {
         await new Promise(r => setTimeout(r, 400))
         setProgress(i)

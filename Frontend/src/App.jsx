@@ -18,7 +18,6 @@ import ReportViewer from './pages/viewer/ReportViewer'
 import { AuthContext } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 
-// Trang 403 — Không có quyền truy cập
 function Forbidden() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16, background: 'var(--bg)', fontFamily: 'Inter, sans-serif' }}>
@@ -32,7 +31,6 @@ function Forbidden() {
   )
 }
 
-// Trang 404
 function NotFound() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16, background: 'var(--bg)', fontFamily: 'Inter, sans-serif' }}>
@@ -47,9 +45,8 @@ function NotFound() {
 }
 
 export default function App() {
-  // Lấy user từ localStorage nếu đã đăng nhập trước đó (để F5 không bị mất)
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('user')
+    const saved = sessionStorage.getItem('user')
     if (saved) {
       try { return JSON.parse(saved) } catch (e) { return null }
     }
