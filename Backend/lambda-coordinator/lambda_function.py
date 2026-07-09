@@ -86,6 +86,10 @@ def lambda_handler(event, context):
                 if not script_s3_key:
                     script_s3_key = payload.get('test_script', '')
 
+            task_arn = ''
+            if response.get('tasks') and len(response['tasks']) > 0:
+                task_arn = response['tasks'][0].get('taskArn', '')
+
             history_item = {
                 'task_id':        {'S': task_id},
                 'target_url':     {'S': payload.get('target_url', '')},
@@ -96,6 +100,8 @@ def lambda_handler(event, context):
                 'triggered_by':   {'S': payload.get('triggered_by', 'manual')},
                 'started_at':     {'S': datetime.datetime.utcnow().isoformat() + 'Z'}
             }
+            if task_arn:
+                history_item['task_arn'] = {'S': task_arn}
 
             if payload.get('suite_name'):
                 history_item['suite_name'] = {'S': payload['suite_name']}

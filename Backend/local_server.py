@@ -50,7 +50,7 @@ mock_dynamodb.Table.return_value = mock_table
 mock_boto3.resource.return_value = mock_dynamodb
 
 # pyrefly: ignore [missing-import]
-import lambda_backend
+import lambda_function as lambda_backend
 
 # ===== In-memory stores (thay thế AWS khi chạy local) =====
 _schedules_store = []

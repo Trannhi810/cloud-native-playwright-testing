@@ -49,10 +49,27 @@ def handle_get_stats():
         if failed > 0: pie_data.append({'name': 'Fail', 'value': failed, 'color': '#ef4444'})
         if not pie_data: pie_data = [{'name': 'Chưa có dữ liệu', 'value': 1, 'color': '#e2e8f0'}]
         
+        trend_dict = {}
+        for item in items:
+            dt_str = item.get('started_at')
+            if not dt_str or len(str(dt_str)) < 10:
+                continue
+            day = str(dt_str)[5:10].replace('-', '/')
+            if day not in trend_dict:
+                trend_dict[day] = {'pass': 0, 'fail': 0}
+            
+            if item.get('status') == 'success':
+                trend_dict[day]['pass'] += 1
+            elif item.get('status') == 'failed':
+                trend_dict[day]['fail'] += 1
+                
+        trend_data = [{'day': k, 'pass': v['pass'], 'fail': v['fail']} for k, v in trend_dict.items()]
+        trend_data.sort(key=lambda x: x['day'])
+        
         return success({
             'stats': stats,
             'pieData': pie_data,
-            'trendData': [],
+            'trendData': trend_data,
             'recentRuns': [format_run_history_item(i) for i in recent]
         })
     except Exception as e:
