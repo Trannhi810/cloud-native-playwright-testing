@@ -1,6 +1,8 @@
 import os
 import json
 import uuid
+import re
+import unicodedata
 from core.aws import scheduler, logger
 from core.responses import success, error
 
@@ -29,9 +31,10 @@ def handle_get_schedules():
                 
                 schedules.append({
                     'id': name,
-                    'name': name,
+                    'name': input_data.get('human_name', name),
                     'website': input_data.get('website', 'N/A'),
                     'env': input_data.get('env', 'Production'),
+                    'testSuite': input_data.get('testSuite', input_data.get('test_script', '')),
                     'cron': cron_str,
                     'humanCron': f'Cron expression: {cron_str}',
                     'status': 'active' if state == 'ENABLED' else 'inactive',
@@ -48,7 +51,11 @@ def handle_get_schedules():
 
 def handle_post_schedules(body):
     try:
-        name = body.get('name', f'schedule-{uuid.uuid4()}')
+        raw_name = body.get('name', f'schedule-{uuid.uuid4()}')
+        slug = unicodedata.normalize('NFKD', raw_name).encode('ASCII', 'ignore').decode('utf-8')
+        name = re.sub(r'[^0-9a-zA-Z-_.]', '-', slug).strip('-')
+        if not name: name = f'schedule-{uuid.uuid4()}'
+        
         cron = body.get('cron', '0 2 * * *')
         parts = cron.strip().split()
         
@@ -80,7 +87,13 @@ def handle_post_schedules(body):
             Target={
                 'Arn': queue_arn,
                 'RoleArn': os.environ.get('SCHEDULER_ROLE_ARN', ''),
-                'Input': json.dumps({'website': body.get('website', ''), 'env': body.get('env', 'Production')})
+                'Input': json.dumps({
+                    'website': body.get('website', ''), 
+                    'env': body.get('env', 'Production'),
+                    'testSuite': body.get('testSuite', ''),
+                    'test_script': body.get('testSuite', ''),
+                    'human_name': raw_name
+                })
             }
         )
         return success({'message': 'Tạo lịch thành công', 'name': name})

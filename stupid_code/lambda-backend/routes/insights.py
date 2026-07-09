@@ -73,7 +73,7 @@ def handle_get_ai_insights():
         
         failed_items = [i for i in recent_items if i.get('status') == 'failed']
         if len(failed_items) > 0:
-            failed_items.sort(key=lambda x: x.get('started_at', ''), reverse=True)
+            failed_items.sort(key=lambda x: str(x.get('started_at') or ''), reverse=True)
             repeating_errors = 1
             last_seen = failed_items[0].get('started_at', '')[:10] if failed_items[0].get('started_at') else "Hôm nay"
             repeating_error_patterns = [
